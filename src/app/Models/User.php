@@ -22,6 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'is_first_login',
+        'profile_completed',
     ];
 
     /**
@@ -47,6 +48,28 @@ class User extends Authenticatable implements MustVerifyEmail
     public function profile()
     {
         return $this->hasOne(\App\Models\Profile::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+    public function purchases()
+    {
+        return $this->hasMany(\App\Models\Purchase::class);
+    }
+    public function likeProducts()
+    {
+        return $this->belongsToMany(Product::class, 'favorites', 'user_id', 'product_id')
+            ->withTimestamps();
     }
 }
 

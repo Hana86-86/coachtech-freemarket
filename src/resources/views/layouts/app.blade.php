@@ -1,46 +1,60 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', '商品一覧')</title>
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>@yield('title','Freemarket')</title>
+
+  {{-- 共通CSS --}}
+  <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
+  @stack('styles')
 </head>
 <body>
-    <header>
-        <h1>Freemarket</h1>
-        <nav>
-            <a href="{{ route('items.index') }}">商品一覧</a>
-            @guest
-            <a href="{{ route('register') }}">会員登録</a>
-            <a href="{{ route('login') }}">ログイン</a>
-        @endguest
 
-        @auth
-            <a href="#">マイページ</a>
-            <a href="{{ route('logout') }}"
-            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            ログアウト
-            </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-            @csrf
-            </form>
-        @endauth
+  {{-- ヘッダー：未ログイン＝ロゴのみ / ログイン後＝検索＋ナビ --}}
+  <header class="site-header">
+    <div class="site-header__inner">
+      {{-- ブランドロゴ（常に表示） --}}
+      <a href="{{ route('products.index') }}" class="site-header__brand">
+        <img src="{{ asset('storage/common/logo.svg') }}" alt="COACHTECH" style="height:22px">
+      </a>
+  {{-- 未ログイン（ゲスト用）--}}
+      @guest
+      <div class="nav__links">
+      <a href="{{ route('register') }}">会員登録</a>
+      <a href="{{ route('login') }}">ログイン</a>
+      </div>
+      @endguest
 
-            <!-- 検索フォーム -->
-            <form action="{{ route('items.index') }}" method="GET" style="display:inline;">
-                <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder="何をお探しですか？">
-                <button type="submit">検索</button>
-            </form>
-        </nav>
-    </header>
+      {{-- ログイン後（認証済みユーザー）用 --}}
+    @auth
+      <form action="{{ route('products.index') }}" method="GET" class="nav__search" role="search">
+        <input type="text" name="keyword" value="{{ request('keyword') }}" placeholder="何をお探しですか？" />
+        <button type="submit">検索</button>
+      </form>
 
-    <main>
-        @yield('content')
-    </main>
+      <div class="nav__links">
+        <a href="{{ route('mypage.index') }}">マイページ</a>
+        <a href="{{ route('products.create') }}">出品</a>
+        <a href="#" onclick="event.preventDefault();document.getElementById('logout-form').submit();">ログアウト</a>
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
+          @csrf
+        </form>
+      </div>
+    @endauth
+  </div>
+</header>
 
-    <footer>
-        <p>&copy; 2025 Freemarket</p>
-    </footer>
+  <main class="container">
+    @yield('content')
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>© {{ now()->year }} Freemarket</p>
+    </div>
+  </footer>
+
+  @stack('scripts')
 </body>
 </html>

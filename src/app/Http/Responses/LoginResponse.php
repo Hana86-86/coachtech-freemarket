@@ -18,11 +18,11 @@ class LoginResponse implements LoginResponseContract
         return redirect()->route('verification.notice');
     }
     //プロフィール未登録チェック
-    if (! $user->is_first_login) {
-        return redirect()->route('profile.create');
-    }
+    if ($user->is_first_login || !$user->profile_completed) {
+    return redirect()->route('profile.create');
+}
 
     // 通常ログイン（商品一覧へ）
-    return redirect()->route('items.index');
+    return redirect()->route('products.index');
 }
 }
