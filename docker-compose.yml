@@ -30,7 +30,8 @@ services:
       - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    image: phpmyadmin:latest
+    platform: linux/amd64
     environment:
       - PMA_ARBITRARY=1
       - PMA_HOST=mysql

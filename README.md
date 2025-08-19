@@ -68,6 +68,111 @@ Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 
 ---
 
+・メール認証の確認方法
+
+Mailtrap の利用
+•本番メールサーバーの代わりに Mailtrap を使用。
+
+- .env 設定:
+  MAIL_MAILER=smtp
+  MAIL_HOST=sandbox.smtp.mailtrap.io
+  MAIL_PORT=2525
+  MAIL_USERNAME=xxxxx
+  MAIL_PASSWORD=xxxxx
+  MAIL_ENCRYPTION=null
+  MAIL_FROM_ADDRESS=no-reply@example.com
+  MAIL_FROM_NAME="Freemarket"
+
+手順 1. 新規会員登録を行う。 2. Mailtrap の Inbox に送信された認証メールを確認。 3. メール内の認証リンクをクリック。 4. 初回ログイン時はプロフィール登録画面に遷移、その後は items 一覧に遷移。
+
+ユーザーの状態管理用カラム
+|カラム名　　　　　　|説明
+|------------------|---------------------------------------------------
+|is_first_login 　　|初回ログイン時にプロフィール入力するへ誘導するためのフラグ。登録時は自動的に 1(true)になる。初回プロフィール保存時に０へ
+|profile_completed |プロフィールが設定済みかを判定するためのカラム。登録時には自動的に 0(false)となりプロフィール設定完了後に 1(true)へ更新される
+・laravel のマイグレーションで'default' 値を指定することで、登録時に自動的に値が入るように設計しています。
+
+---
+
+・購入フロー：詳細 -> 確認（支払い方法プルダウン） -> Stripe -> 完了
+・支払い方法：UI でカード/コンビニを選択可能
+・成功時の処理：products.sale_status = 'sold',purchase にレコード作成
+・SOLD 表示：一覧でバッジ、詳細で購入ボタン向こう
+・購入履歴：/profile/purchases に表示
+
+・Stripe 決済機能について
+概要：
+
+- 商品ページから購入確認ページを経由し、Stripe の Checkout ページで決済を行うことができます。
+
+- テストカード番号
+  |　カードブランド　　　　カード番号　　　　　有効期限　　　　　　 CVC 　　　　　　　備考
+  |-----------------|---------------------|------------|-------------|-----------------|
+  　　　 VISA 4242 4242 4242 4242 任意の未来日　　任意の 3 桁　　　　常に成功する決済
+
+・環境変数設定(.env)
+STRIPE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxx
+STRIPE_SECRET=sk_test_xxxxxxxxxxxxxxxxxxxxx
+
+---
+
+・画像アップロード対応（プロフィール画像）
+(ユーザーがアップロードするファイルは storage/app/public に保存されます)
+１）追加パッケージ
+
+```
+composer require intervention/image:^3 intervention/image-laravel:^1
+php artisan optimize:clear
+
+２）Dockerfileの変更（php-fpm）
+- GD + JPEG/FreeType を有効化して WebP を扱えるようにします。
+```
+
+FROM php:8.2-fpm
+
+COPY php.ini /usr/local/etc/php/
+
+RUN apt-get update && apt-get install -y \
+ libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
+ && docker-php-ext-configure gd --with-freetype --with-jpeg \
+ && docker-php-ext-install -j$(nproc) gd \
+ && rm -rf /var/lib/apt/lists/\*
+
+WORKDIR /var/www
+
+- 反映コマンド
+
+```
+docker compose build --no-cache php
+docker compose up -d
+- 動作確認
+docker compose exec php php -m | grep -Ei 'gd|exif'
+docker compose exec php php -i | grep -i webp
+- gd / exif が出る、WebP Support => enabled が出る
+
+３）php.iniの変更
+- アップロードサイズを拡張
+以下追記
+```
+
+upload_max_filesize = 20M
+post_max_size = 21M
+
+４）Nginx のクライアントサイズ制限
+
+- nginx/default.conf に以下追記
+
+```
+client_max_body_size 20M;
+
+５）laravel側の設定
+- ストレージ公開
+php artisan storage:link
+
+- public ディスクを使用（Storage::disk('public')）
+
+----
+
 ・エラーと解決方法
 
 1. Class "App\Providers\FortifyServiceProvider" not found
@@ -99,7 +204,7 @@ Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 ・Laravel Fortify がデフォルトで /home にリダイレクト
 ・今回のアプリには /home ルートが無いため 404
 
-419エラー解決方法：.env を以下に修正
+419 エラー解決方法：.env を以下に修正
 
 - APP_URL=http://localhost:8081
   修正後にキャッシュクリア
@@ -107,10 +212,13 @@ Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 - docker compose exec php php artisan cache:clear
 - docker compose exec php php artisan route:clear
 
-404エラー解決方法：
+404 エラー解決方法：
+
 - LoginResponse をオーバーライドしてログイン後 /items にリダイレクトする。
-ファイル作成：src/app/Http/Responses/LoginResponse.php
+  ファイル作成：src/app/Http/Responses/LoginResponse.php
+
 ```
+
 <?php
 
 namespace App\Http\Responses;
@@ -125,8 +233,10 @@ class LoginResponse implements LoginResponseContract
     }
 }
 ```
+
 - サービスプロバイダに登録
-src/app/Providers/AppServiceProvider.php
+  src/app/Providers/AppServiceProvider.php
+
 ```
 use Laravel\Fortify\Contracts\LoginResponse;
 use App\Http\Responses\LoginResponse as CustomLoginResponse;
@@ -136,17 +246,18 @@ public function register()
     $this->app->singleton(LoginResponse::class, CustomLoginResponse::class);
 }
 ```
-----
 
-・エラーと解決方法
-1.プロフィール初回登録画面に遷移しない問題
+---
+
+・エラーと解決方法 1.プロフィール初回登録画面に遷移しない問題
+
 - 原因: `is_first_login` フラグが更新されない。
 - 対応:
   - `LoginResponse.php` を修正し、`is_first_login` が true の場合に `profile.create` に遷移。
   - `ProfileController@store` でプロフィール保存後に `is_first_login` を false に更新。
   - 修正後に `php artisan optimize:clear` を実行しキャッシュをクリア。
 
-```php
+````php
 // ProfileController@store
 $request->user()->update(['is_first_login' => false]);
 
@@ -163,26 +274,6 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     }
     return redirect()->route('items.index');
 })->middleware(['auth', 'signed'])->name('verification.verify');
-```
+````
+
 ---
-メール認証の確認方法
-
-Mailtrap の利用
-	•本番メールサーバーの代わりに Mailtrap を使用。
-- .env 設定:
-MAIL_MAILER=smtp
-MAIL_HOST=sandbox.smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=xxxxx
-MAIL_PASSWORD=xxxxx
-MAIL_ENCRYPTION=null
-MAIL_FROM_ADDRESS=no-reply@example.com
-MAIL_FROM_NAME="Freemarket"
-
-手順
-	1.	新規会員登録を行う。
-	2.	Mailtrap の Inbox に送信された認証メールを確認。
-	3.	メール内の認証リンクをクリック。
-	4.	初回ログイン時はプロフィール登録画面に遷移、その後は items 一覧に遷移。
-
-
