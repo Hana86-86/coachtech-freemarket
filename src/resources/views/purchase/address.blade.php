@@ -1,42 +1,40 @@
 @extends('layouts.app')
+@section('title','住所の変更')
 
 @section('content')
-<div class="form-container">
-    <h2>住所の変更</h2>
+<div class="container container--narrow">
+<h1 class="page-title">住所の変更</h1>
 
-    @if(session('success'))
+@if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+@endif
 
-    <form method="POST" action="{{ route('purchase.address.update') }}">
-        @csrf
-        <input type="hidden" name="product_id" value="{{ $productId }}">
+<form method="POST" action="{{ route('purchase.address.update') }}" class="address-form">
+    @csrf
+    <input type="hidden" name="product_id" value="{{ $productId }}">
 
-        <label>郵便番号</label>
-        <input type="text" name="postal_code" value="{{ old('postal_code', $profile->postal_code) }}">
-        @error('postal_code')
-        <div class="alert alert-danger">{{ $message }}</div>
-        @enderror
+    <div class="form-rail">
 
-        <label>住所</label>
-        <input type="text" name="address" value="{{ old('address', $profile->address) }}">
-        @error('address')
-        <div class="alert alert-danger">{{ $message }}</div>
-        @enderror
+    <label class="form-label">郵便番号</label>
+    <input type="text" name="postal_code" class="input"
+            value="{{ old('postal_code', $profile->postal_code ?? '') }}" required>
+    @error('postal_code') <p class="error">{{ $message }}</p> @enderror
 
-        <label>建物名</label>
-        <input type="text" name="building" value="{{ old('building', $profile->building) }}">
-        @error('building')
-        <div class="alert alert-danger">{{ $message }}</div>
-        @enderror
+    <label class="form-label" style="margin-top:12px;">住所</label>
+    <input type="text" name="address" class="input"
+            value="{{ old('address', $profile->address ?? '') }}" required>
+    @error('address') <p class="error">{{ $message }}</p> @enderror
 
-        <button type="submit">更新</button>
-    </form>
+    <label class="form-label" style="margin-top:12px;">建物名（任意）</label>
+    <input type="text" name="building" class="input"
+            value="{{ old('building', $profile->building ?? '') }}">
+    @error('building') <p class="error">{{ $message }}</p> @enderror
 
-    <div class="link-wrapper">
-        <a class="link-text" href="{{ $productId ? route('purchase.confirm',$productId) : route('products.index') }}">
-            戻る
-        </a>
+    <button type="submit" class="btn btn--primary btn--form" style="margin-top:16px;">
+        更新する
+    </button>
+
     </div>
+</form>
 </div>
 @endsection

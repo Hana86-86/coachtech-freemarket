@@ -9,6 +9,8 @@ use App\Models\Product;
 use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
 use App\Models\Purchase;
+use App\Http\Requests\PurchaseRequest;
+use Stripe\PaymentIntent as StripePaymentIntent;
 
 class PurchaseController extends Controller
 {
@@ -16,63 +18,110 @@ class PurchaseController extends Controller
     {
         $product = Product::findOrFail($id);
         //デフォルトは Card
-        $method = $request->query('method','card');
+        $paymentMethod = $request->query('payment_method','card');
 
-        return view('purchase.confirm', compact('product','method'));
+        if (!$request->boolean('resume')) {
+            session()->forget('checkout_shipping');
+        }
+
+        return view('purchase.confirm', compact('product','paymentMethod'));
     }
 
     public function checkout(PurchaseRequest $request, $id)
-    {
-        $product = Product::findOrFail($id);
-        $method = $request->input('payment_method', 'card');
-        // Stripe初期化
-        Stripe::setApiKey(env('STRIPE_SECRET'));
-        //Checkoutセッション
-        $session = \Stripe\Checkout\Session::create([
-            'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price_data' => [
-                    'currency' =>'jpy',
-                    'product_data' => [
-                        'name' => $product->title,
-                    ],
-                    'unit_amount' => $product->price, // 金額（円->最小単位）
+{
+    $product = Product::findOrFail($id);
+    $method  = $request->input('payment_method', 'card');
+
+    if ($product->sale_status === Product::SALE_STATUS_SOLD) {
+        return back()->with('error', '売却済みの商品です。');
+    }
+
+    Stripe::setApiKey(env('STRIPE_SECRET'));
+
+    $params = [
+        'mode'                  => 'payment',
+        'payment_method_types'  => [$method === 'konbini' ? 'konbini' : 'card'],
+        'locale'                => 'ja',
+        'line_items' => [[
+            'price_data' => [
+                'currency'    => 'jpy',
+                'unit_amount' => (int) $product->price,   // int 必須
+                'product_data' => [
+                    'name' => (string) $product->title,
                 ],
-                'quantity' =>1,
-            ]],
-            'mode' =>'payment',
-            'success_url' => route('purchase.success').'?pid='.$product->id.'&method='.$method,
-            'cancel_url' => route('purchase.confirm', ['id'=>$product->id,'method'=>$method]),
-            ]);
-            return redirect($session->url);
-            }
-        public function success(Request $request)
+            ],
+            'quantity' => 1,
+        ]],
+        // 成功時に商品特定できるようにするため metadata を PaymentIntent に付与
+        'payment_intent_data' => [
+            'metadata' => [
+                'product_id' => (string) $product->id,
+                'seller_id'  => (string) $product->user_id,
+                'user_id'   => (string) auth()->id(),
+            ],
+        ],
+        'success_url' => route('purchase.success', ['id' => $product->id]) . '?session_id={CHECKOUT_SESSION_ID}',
+        'cancel_url'  => route('purchase.confirm', ['id' => $product->id]),
+    ];
+        // コンビニ払いのオプション
+        if ($method === 'konbini') {
+            $params['payment_method_options'] = [
+                'konbini' => ['expires_after_days' => 3],
+            ];
+        }
+
+        $session = StripeSession::create($params);
+        return redirect($session->url);
+    }
+
+        public function success(Request $request, $id)
     {
-        $productId = (int) $request->query('pid');
-        $method    = $request->query('method','card');
 
-        $product = Product::findOrFail($productId);
+        $product = Product::findOrFail($id);
+        // StripeのセッションIDをクエリから取得
+        $csid   = $request->query('session_id');
+        $method = 'unknown';
 
-        DB::transaction(function () use ($product, $method) {
-            // 在庫ガード
-            if ($product->sale_status === Product::SALE_STATUS_SOLD) {
-                abort(409, 'この商品は売り切れです');
-            }
-            // 売却済に更新
-            $product->update(['sale_status' => Product::SALE_STATUS_SOLD]);
+        if ($csid) {
+            Stripe::setApiKey(env('STRIPE_SECRET'));
+        // 支払い方法と PaymentIntent を取得
+            $session = StripeSession::retrieve($csid, ['expand' => ['payment_intent']]);
 
-            // 購入履歴を保存
-            Purchase::create([
-                'user_id'        => Auth::id(),
-                'product_id'     => $product->id,
-                'amount'         => $product->price,
-                'payment_method' => $method,      // 'card' or 'konbini'(UI選択値)
-                'status'         => 'paid',
-                'paid_at'        => now(),
-            ]);
-        });
-        return view('purchase.success');
+        // 決済手段
+            $method = $session->payment_method_types[0] ?? 'unknown';
+
+            $pi = $session->payment_intent;
+
+            if (is_string($pi)) {
+            $pi = StripePaymentIntent::retrieve($pi);
+        }
+
+        if ($method === 'card' && $pi && $pi->status === 'succeeded') {
+            DB::transaction(function () use ($pi, $product, $method) {
+                // 重複作成防止：同じ payment_intent_id があれば作らない
+                Purchase::firstOrCreate(
+                    ['payment_intent_id' => $pi->id],
+                    [
+                        'user_id'       => auth()->id(),
+                        'product_id'     => $product->id,
+                        'amount'         => $product->price,
+                        'payment_method' => $method,
+                        'status'         => Purchase::STATUS_COMPLETED,
+                        'paid_at'        => now(),
+                    ]
+                );
+
+                // 既に SOLD でなければ更新
+                if ($product->sale_status !== Product::SALE_STATUS_SOLD) {
+                    $product->update(['sale_status' => Product::SALE_STATUS_SOLD]);
+                }
+            });
+        }
+
+    }
+        session()->forget('checkout_shipping');
+
+        return redirect()->route('products.index')->with('success', '購入が完了しました。');
     }
 
-    }
-
+}

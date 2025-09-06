@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Models;
+use App\Models\Purchase;
+use App\Models\Profile;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -47,7 +51,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function profile()
     {
-        return $this->hasOne(\App\Models\Profile::class);
+        return $this->hasOne(Profile::class);
     }
 
     public function comments()
@@ -64,12 +68,18 @@ class User extends Authenticatable implements MustVerifyEmail
     }
     public function purchases()
     {
-        return $this->hasMany(\App\Models\Purchase::class);
+        return $this->hasMany(Purchase::class);
     }
-    public function likeProducts()
-    {
-        return $this->belongsToMany(Product::class, 'favorites', 'user_id', 'product_id')
-            ->withTimestamps();
+
+    public function getAvatarUrlAttribute(): string
+{
+    $path = optional($this->profile)->profile_image;
+
+    if ($path && Storage::disk('public')->exists($path)) {
+        return Storage::url($path);
     }
+    return asset('images/avatar-placeholder.png');
+}
+
 }
 

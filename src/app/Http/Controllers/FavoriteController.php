@@ -4,38 +4,40 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Favorite;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+
 
 class FavoriteController extends Controller
 {
-    // お気に入り追加
-    public function store($productId)
-    {
-        Favorite::firstOrCreate([
-            'user_id' => Auth::id(),
-            'product_id' => $productId,
-        ]);
-
-        return back()->with('success','お気に入りを追加しました！');
+    public function toggle(Request $request, Product $product)
+{
+        if (auth()->check()) {
+        $col = 'user_id';
+        $val = auth()->id();
+    } else {
+        $token = $request->cookie('vtoken');
+        if (!$token) {
+            $token = (string) \Illuminate\Support\Str::uuid();
+            cookie()->queue(cookie('vtoken', $token, 60*24*365)); // 1年
+        }
+        $col = 'visitor_token';
+        $val = $token;
     }
 
-    // お気に入り解除
-    public function destroy($productId)
-    {
-        Favorite::where('user_id', Auth::id())
-                ->where('product_id', $productId)
-                ->delete();
+    $query = $product->favorites()->where($col, $val);
 
-        return back()->with('success', 'お気に入りを削除しました！');
+    $favorited = false;
+    if ($query->exists()) {
+        $query->delete();        // 解除
+    } else {
+        $product->favorites()->create([$col => $val]); // 付与
+        $favorited = true;
     }
 
-    // マイリスト表示
-    public function index()
-    {
-        $favorites = Favorite::with('product')
-                            ->where('user_id', Auth::id())
-                            ->get();
-
-        return view('favorites.index', compact('favorites'));
-    }
+    return response()->json([
+        'favorited' => $favorited,
+        'count'     => $product->favorites()->count(),
+    ]);
+}
 }

@@ -5,59 +5,116 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
-use App\Http\Requests\ProductStoreRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\str;
-use Illuminate\Support\Facades\Storage;
-
+use App\Http\Requests\ProductStoreRequest;
+use App\Http\Requests\ProductUpdateRequest;
 
 class ProductController extends Controller
 {
-    // 商品一覧（検索付き）
+    public function currentFavoriteOwner(Request $request):array
+    {
+        if(auth()->check()) {
+            return ['column' => 'user_id','value' => auth()->id()];
+        }
+        // ゲスト用トークン
+        $token = $request->cookie('vtoken');
+        if(!$token) {
+            $token = (string) \Illuminate\Support\Str::uuid();
+            cookie()->queue(cookie('vtoken', $token, 60*24*365)); // 1年
+        }
+        return ['column' => 'visitor_token', 'value' => $token];
+    }
+
+    // 商品一覧（おすすめ / マイリスト + キーワード検索）
     public function index(Request $request)
     {
-        $query = Product::query();
-        // 検索処理
-        if ($request->filled('keyword')) {
-            $query->where('title','like','%' . $request->keyword .'%')
-                ->orWhere('description','like','%'. $request->keyword .'%');
-        }
+        $tab   = $request->string('tab')->toString();
+        $query = Product::query()
+        ->with('category')
+        ->whereIn('sale_status', [Product::SALE_STATUS_PUBLIC, Product::SALE_STATUS_SOLD]);
 
-        $products = $query->get();
+        // マイリスト（認証ユーザーのみ表示）
+        if ($tab === 'mylist') {
+            if (auth()->check()) {
+                $query->whereHas('favorites', fn($query) => $query->where('user_id', auth()->id() ));
+            } else {
+                $query->whereRaw('0=1');
+            }
+        }
+        // 自分の商品は一覧から除外
+        if (auth()->check()) {
+            $query->where('user_id', '!=', auth()->id());
+        }
+            // タブ：おすすめ(=通常一覧)
+            $products = $query
+                ->with(['category'])
+                ->withCount(['favorites', 'comments'])
+                ->latest()
+                ->paginate(12)
+                ->withQueryString();
+
+         // キーワード
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+
+        $query->where(function($query) use ($keyword) {
+            $query->where('title', 'like', "%{$keyword}%")
+                ->orWhere('description', 'like', "%{$keyword}%")
+                ->orWhere('brand', 'like', "%{$keyword}%")
+                ->orWhereHas('category', function($query) use ($keyword) {
+            $query->where('name', 'like', "%{$keyword}%");
+        })
+            ->orWhereHas('user', function($query) use ($keyword) {
+            $query->where('name', 'like', "%{$keyword}%");
+        });
+    });
+}
+
+        $products = $query->paginate(12)->withQueryString();
+
         return view('products.index', compact('products'));
     }
-
     // 商品詳細
-    public function show($id)
+    public function show(Request $request, Product $product)
     {
-        $product = Product::findOrFail($id); // 該当商品がなければエラー
-        return view('products.show', compact('product'));
+        $product->loadCount(['favorites', 'comments'])
+                ->load(['category', 'comments.user', 'user']);
 
-        $product = Product::with(['category','comments.user'])
-            ->withCount(['comments','favorites'])
-            ->findOrFail($id);
-    }
+        $owner = $this->currentFavoriteOwner($request);
+        $isFavorited = $product->favorites()
+                    ->where($owner['column'], $owner['value'])
+                    ->exists();
 
-    // 出品
-    public function create()
+        $isOwner = auth()->check() && $product->user_id === auth()->id();
+
+        return view('products.show', compact('product', 'isOwner', 'isFavorited'));
+}
+    // 出品編集フォーム
+    public function edit(Product $product)
     {
-        $categories = Category::orderBy('name')->get(); // タグ風に並べる
-        $conditions = ['新品・未使用','未使用に近い','目立った傷や汚れなし','やや傷や汚れあり','状態が悪い'];
-        return view('products.create', compact('categories', 'conditions'));
+        $this->authorize('update', $product);
+
+        $categories = Category::orderBy('name')->get();
+        $conditions = ['新品・未使用', '未使用に近い', '目立った傷や汚れなし', 'やや傷や汚れあり', '状態が悪い'];
+
+        return view('products.create', [
+            'product'    => $product,
+            'categories' => $categories,
+            'conditions' => $conditions,
+            'mode'       => 'edit',
+        ]);
     }
+    // 出品登録
     public function store(ProductStoreRequest $request)
     {
         $validated = $request->validated();
 
-        // 画像保存
         $path = null;
         if ($request->hasFile('image')) {
-            $saved = $request->file('image')->store(
-                'products/'.now()->format('Y/m'),
-                'public'
-                );
-                $path = 'storage/' . $saved;
+            $saved = $request->file('image')->store('products/'.now()->format('Y/m'), 'public');
+            $path  = 'storage/' . $saved;
         }
+
         $product = Product::create([
             'user_id'     => auth()->id(),
             'title'       => $validated['title'],
@@ -67,12 +124,52 @@ class ProductController extends Controller
             'condition'   => $validated['condition'],
             'price'       => $validated['price'],
             'image_path'  => $path,
-            'sale_status' => Product::SALE_STATUS_PUBLIC, //初期状態「公開中」
+            // 公開/売却済み
+            'sale_status' => Product::SALE_STATUS_PUBLIC,
         ]);
 
-        return redirect()->route('products.show', $product)->with('success','出品しました！');
+        return redirect()->route('products.show', $product) ->with('success', '出品しました！');
+    }
+    // 出品更新
+    public function update(ProductUpdateRequest $request, Product $product)
+    {
+        $this->authorize('update', $product);
+
+        $validated = $request->validated();
+
+        $data = [
+            'title'       => $validated['title'],
+            'brand'       => $validated['brand'] ?? null,
+            'description' => $validated['description'],
+            'category_id' => $validated['category_id'],
+            'condition'   => $validated['condition'],
+            'price'       => $validated['price'],
+        ];
+
+        if ($request->hasFile('image')) {
+            $saved = $request->file('image')->store('products/'.now()->format('Y/m'), 'public');
+            $data['image_path'] = 'storage/' . $saved;
+
+            // 旧画像の削除（public ディスク）
+            if ($product->image_path && str_starts_with($product->image_path, 'storage/')) {
+                \Illuminate\Support\Facades\Storage::disk('public')
+                    ->delete(str_replace('storage/', '', $product->image_path));
+            }
+        }
+
+        $product->update($data);
+
+        return redirect()->route('products.show', $product)
+            ->with('success', '商品情報を更新しました。');
+    }
+    // 出品フォーム
+    public function create()
+    {
+        $categories = Category::orderBy('name')->get();
+        $conditions = ['新品・未使用', '未使用に近い', '目立った傷や汚れなし', 'やや傷や汚れあり', '状態が悪い'];
+
+        return view('products.create', compact('categories', 'conditions'));
     }
 
-
-
+    
 }

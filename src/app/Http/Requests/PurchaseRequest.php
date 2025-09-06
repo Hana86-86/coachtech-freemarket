@@ -22,24 +22,20 @@ class PurchaseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'method'  => ['required', 'string', 'in:card,konbini'],
-            'address' => ['required', 'string', 'max:255'],
+            'payment_method'  => ['required', 'string', 'in:card,konbini'],
         ];
     }
     public function attributes(): array
     {
         return [
-            'method'  => '支払い方法',
-            'address' => '配送先住所',
+            'payment_method'  => '支払い方法',
         ];
     }
     public function messages(): array
     {
         return [
-            'method.required'  => '支払い方法は必須です。',
-            'method.in'       => '支払い方法は「カード」または「コンビニ」のいずれかを選択してください。',
-            'address.required' => '配送先住所は必須です。',
-            'address.max'      => '配送先住所は255文字以内で入力してください。',
+            'payment_method.required'  => '支払い方法は必須です。',
+            'payment_method.in'       => '支払い方法は「カード」または「コンビニ」のいずれかを選択してください。',
         ];
 }
 }

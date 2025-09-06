@@ -11,11 +11,12 @@ class ShippingAddressController extends Controller
 {
     public function edit(Request $request)
     {
-        // product_id をクエリで受けて、保存後に確認画面へ戻す
         $productId = $request->query('product_id');
-        $profile = Profile::firstOrNew(['user_id' => Auth::id()]);
-        
-        return view('purchase.address', compact('profile', 'productId'));
+        $profile   = Profile::firstOrNew(['user_id' => Auth::id()]);
+
+        $sessionShipping = session('checkout_shipping');
+
+        return view('purchase.address', compact('profile', 'productId', 'sessionShipping'));
     }
 
     public function update(AddressRequest $request)
@@ -26,25 +27,25 @@ class ShippingAddressController extends Controller
             'building'    => 'nullable|string|max:255',
             'product_id'  => 'nullable|integer',
         ]);
-        // 取得
-        $profile = \App\Models\Profile::firstOrNew(['user_id' => auth()->id()]);
-        // 更新
-        \App\Models\Profile::updateOrCreate(
-            ['user_id' => Auth::id()],
-            [
-                'postal_code' => $validated['postal_code'],
-                'address'     => $validated['address'],
-                'building'    => $validated['building'] ?? null,
-            ]
-        );
+        $shipping = $request->safe()->only(['postal_code', 'address', 'building']);
 
-        // 住所変更後は購入確認へ戻す(product_id があればそこへ)
+        session()->put('checkout_shipping', [
+            'postal_code' => $validated['postal_code'],
+            'address'     => $validated['address'],
+            'building'    => $validated['building'] ?? null,
+        ]);
+
+        // 住所変更後は購入確認へ戻す
         if (!empty($validated['product_id'])) {
-            return redirect()->route('purchase.confirm', $validated['product_id'])
-                ->with('success', '配送先を更新しました。');
+            return redirect()->route('purchase.confirm', [
+                'id'      => $validated['product_id'],
+                'resume'  => 1,
+                ]) ->with('success', '配送先を更新しました。');
         }
 
         return back()->with('success', '配送先を更新しました。');
+
+
 
     }
 }

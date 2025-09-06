@@ -2,7 +2,11 @@
 
 ・COACHTECH フリマ（フリマアプリ）
 ユーザー登録すると商品を出品できるようになるフリマアプリです。
+検索 UI/ロジックを共通化して、商品一覧とマイリスト（お気に入り）で同じ操作感を実現。
 Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
+
+• Web: http://localhost:8081
+• phpMyAdmin: http://localhost:8080
 
 ・使用技術
 
@@ -64,7 +68,7 @@ Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 
 - php artisan migrate
 
-![ER図](image.png)
+![ER図](er-diagram.png)
 
 ---
 
@@ -116,164 +120,5 @@ STRIPE_SECRET=sk_test_xxxxxxxxxxxxxxxxxxxxx
 
 ---
 
-・画像アップロード対応（プロフィール画像）
-(ユーザーがアップロードするファイルは storage/app/public に保存されます)
-１）追加パッケージ
 
-```
-composer require intervention/image:^3 intervention/image-laravel:^1
-php artisan optimize:clear
 
-２）Dockerfileの変更（php-fpm）
-- GD + JPEG/FreeType を有効化して WebP を扱えるようにします。
-```
-
-FROM php:8.2-fpm
-
-COPY php.ini /usr/local/etc/php/
-
-RUN apt-get update && apt-get install -y \
- libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
- && docker-php-ext-configure gd --with-freetype --with-jpeg \
- && docker-php-ext-install -j$(nproc) gd \
- && rm -rf /var/lib/apt/lists/\*
-
-WORKDIR /var/www
-
-- 反映コマンド
-
-```
-docker compose build --no-cache php
-docker compose up -d
-- 動作確認
-docker compose exec php php -m | grep -Ei 'gd|exif'
-docker compose exec php php -i | grep -i webp
-- gd / exif が出る、WebP Support => enabled が出る
-
-３）php.iniの変更
-- アップロードサイズを拡張
-以下追記
-```
-
-upload_max_filesize = 20M
-post_max_size = 21M
-
-４）Nginx のクライアントサイズ制限
-
-- nginx/default.conf に以下追記
-
-```
-client_max_body_size 20M;
-
-５）laravel側の設定
-- ストレージ公開
-php artisan storage:link
-
-- public ディスクを使用（Storage::disk('public')）
-
-----
-
-・エラーと解決方法
-
-1. Class "App\Providers\FortifyServiceProvider" not found
-   原因: config/app.php に FortifyServiceProvider を追記しているのに
-   ファイルが存在しない状態で artisan コマンドを実行していた
-   解決: 1. config/app.php の追記を一旦コメントアウト 2. php artisan make:provider FortifyServiceProvider 3. ファイル生成後に config/app.php へ再追加
-
-2. Your Composer dependencies require a PHP version ">= 8.2.0". You are running 8.1.33
-   原因：PHP バージョンエラー
-   解決：Dockerfile を PHP 8.2 に修正
-   FROM php:8.2-fpm
-   再ビルド：
-   docker compose build --no-cache
-   docker compose up -d
-
----
-
-・エラーと解決方法
-
-1.419 エラー(Page Expired)
-・ログインフォーム送信時に発生
-・メッセージ：419 Page Expired
-
-2.404 エラー
-・ログイン成功後に/home にリダイレクトされるが、そのルートが存在しないため発生
-・メッセージ：NotFound
-
-原因： .env が http://localhost のまま、アクセスは http://localhost:8081
-・Laravel Fortify がデフォルトで /home にリダイレクト
-・今回のアプリには /home ルートが無いため 404
-
-419 エラー解決方法：.env を以下に修正
-
-- APP_URL=http://localhost:8081
-  修正後にキャッシュクリア
-- docker compose exec php php artisan config:clear
-- docker compose exec php php artisan cache:clear
-- docker compose exec php php artisan route:clear
-
-404 エラー解決方法：
-
-- LoginResponse をオーバーライドしてログイン後 /items にリダイレクトする。
-  ファイル作成：src/app/Http/Responses/LoginResponse.php
-
-```
-
-<?php
-
-namespace App\Http\Responses;
-
-use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
-
-class LoginResponse implements LoginResponseContract
-{
-    public function toResponse($request)
-    {
-        return redirect()->intended('/items');
-    }
-}
-```
-
-- サービスプロバイダに登録
-  src/app/Providers/AppServiceProvider.php
-
-```
-use Laravel\Fortify\Contracts\LoginResponse;
-use App\Http\Responses\LoginResponse as CustomLoginResponse;
-
-public function register()
-{
-    $this->app->singleton(LoginResponse::class, CustomLoginResponse::class);
-}
-```
-
----
-
-・エラーと解決方法 1.プロフィール初回登録画面に遷移しない問題
-
-- 原因: `is_first_login` フラグが更新されない。
-- 対応:
-  - `LoginResponse.php` を修正し、`is_first_login` が true の場合に `profile.create` に遷移。
-  - `ProfileController@store` でプロフィール保存後に `is_first_login` を false に更新。
-  - 修正後に `php artisan optimize:clear` を実行しキャッシュをクリア。
-
-````php
-// ProfileController@store
-$request->user()->update(['is_first_login' => false]);
-
-2. メール認証後に items へ遷移する問題
-- 原因: Fortify のメール認証処理に初回ログイン判定が組み込まれていなかった。
-- 対応:
-- web.php のメール認証ルートに is_first_login 判定を追加。
-```php
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-
-    if ($request->user()->is_first_login) {
-        return redirect()->route('profile.create');
-    }
-    return redirect()->route('items.index');
-})->middleware(['auth', 'signed'])->name('verification.verify');
-````
-
----

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use App\Models\Favorite;
 
 class Product extends Model
 {
@@ -21,9 +23,18 @@ class Product extends Model
         'sale_status',
     ];
 
-    public const SALE_STATUS_PUBLIC = '公開中';
-    public const SALE_STATUS_TRADING = '取引中';
-    public const SALE_STATUS_SOLD = '売却済';
+    public const SALE_STATUS_PUBLIC = 'public';
+    public const SALE_STATUS_SOLD = 'sold';
+
+
+    public static function getSaleStatusLabel($status)
+    {
+        return match ($status) {
+            self::SALE_STATUS_PUBLIC => '公開中',
+            self::SALE_STATUS_SOLD   => '売却済み',
+            default => $status,
+        };
+    }
 
     public function getIsSoldAttribute():bool
     {
@@ -45,8 +56,7 @@ class Product extends Model
 
     public function favorites()
     {
-        return $this->hasMany(\App\Models\Favorite::class);
-        product::withCount('favorites')->get();
+        return $this->hasMany(Favorite::class);
     }
     public function favoritedBy()
     {
@@ -58,5 +68,20 @@ class Product extends Model
         return $this->hasMany(Comment::class)
         ->latest();
     }
-    
+    public function getImageUrlAttribute(): string
+    {
+        if (!$this->image_path) {
+            return asset('images/noimage.png');
+    }
+    // 既存データ（storage/付き）にも対応
+        if (str_starts_with($this->image_path, 'storage/')) {
+            return asset($this->image_path);
+    }
+        return asset('storage/'.$this->image_path);
 }
+    public function scopeVisible(Builder $query): Builder
+    {
+        return $query->whereIn('sale_status', [self::SALE_STATUS_PUBLIC, self::SALE_STATUS_SOLD]);
+    }
+}
+

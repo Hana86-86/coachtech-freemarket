@@ -16,7 +16,7 @@ return [
         'numeric'=> ':attribute は :max 以下で入力してください。',
         'array'  => ':attribute は :max 個以下で選択してください。',
     ],
-    'confirmed' => '確認用パスワードと一致しません。',
+    'confirmed' => ':attribute と確認用が一致しません',
     'unique'    => ':attribute はすでに使用されています。',
     'regex'     => ':attribute の形式が正しくありません。',
     'image'     => ':attribute は画像ファイルをアップロードしてください。',
@@ -49,8 +49,24 @@ return [
         'profile_image' => 'プロフィール画像',
     ],
     'custom' => [
+        'name'  => [
+            'required' => 'お名前を入力してください',
+        ],
         'email' => [
-            'unique' => 'このメールアドレスは既に登録されています。'
+            'required' => 'メールアドレスを入力してください',
+            'email'    => 'メールアドレスはメール形式で入力してください',
+            'unique'   => 'このメールアドレスは既に登録されています',
+        ],
+        'password' => [
+            'required'  => 'パスワードを入力してください',
+            'min'       => 'パスワードは8文字以上で入力してください',
+            'confirmed' => 'パスワードと一致しません',
+        ],
+        'password_confirmation' => [
+            'required' => '確認用パスワードを入力してください',
+        ],
+        'auth' => [
+            'failed' => 'ログイン情報が登録されていません',
         ],
     ],
 ];

@@ -4,7 +4,7 @@
 <div class="product-list" style="max-width:1000px; margin:20px auto;">
     @forelse($purchases as $p)
         <div class="product-card">
-            <img src="{{ $p->product->image_path }}" alt="{{ $p->product->title }}">
+            <img src="{{ $product->image_url }}" alt="{{ $product->title }}" loading="lazy">
             <h2>{{ $p->product->title }}</h2>
             <div class="price">¥{{ number_format($p->amount) }}</div>
             <p class="condition">支払い方法: {{ $p->payment_method === 'konbini' ? 'コンビニ払い' : 'カード' }}</p>

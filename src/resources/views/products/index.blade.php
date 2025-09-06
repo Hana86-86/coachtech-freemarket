@@ -3,23 +3,56 @@
 @section('title', '商品一覧')
 
 @section('content')
-<div class="product-list">
-    @forelse($products as $product)
-        <div class="product-card">
-            <img src="{{ asset($product->image_path) }}" alt="{{ $product->title }}">
+<div class="products-index"><!--  一覧専用スコープ -->
 
-            @if($product->is_sold)
-            <span class="sold-label">SOLD</span>
-            @endif
+{{-- ===== タブ（おすすめ / マイリスト） ===== --}}
+<nav class="products_tabs">
+    <a href="{{ route('products.index', ['tab' => null]) }}"
+        class="products_tab {{ request('tab') ? '' : 'is-active' }}">
+        おすすめ
+    </a>
+    <a href="{{ route('products.index', ['tab' => 'mylist']) }}"
+        class="products_tab {{ request('tab') === 'mylist' ? 'is-active' : '' }}">
+        マイリスト
+    </a>
+</nav>
 
-            <h2>{{ $product->title }}</h2>
-            <p class="price">¥{{ number_format($product->price) }}</p>
-            <p class="condition">状態: {{ $product->condition }}</p>
+{{-- ===== 一覧 ===== --}}
+    @if ($products->count())
+    <div class="cards">
+        @foreach ($products as $product)
+        <article class="cards__item">
+            <a href="{{ route('products.show', $product) }}" class="product-card">
 
-            <a href="{{ route('products.show', $product->id) }}">詳細を見る</a>
-        </div>
-        @empty
-        <p>商品が見つかりませんでした。</p>
-    @endforelse
+            <div class="card_thumb">
+                <img src="{{ $product->image_url }}"alt="{{ $product->title }}" loading="lazy">
+                @if ($product->sale_status === \App\Models\Product::SALE_STATUS_SOLD)
+                <span class="badge badge--sold">SOLD</span>
+                @endif
+            </div>
+
+            <div class="card_body">
+                <h3 class="card_title">{{ $product->title }}</h3>
+                <p class="card_price">¥{{ number_format($product->price) }}</p>
+            </div>
+
+        </a>
+        </article>
+    @endforeach
+    </div>
+@else
+    {{-- 空表示 --}}
+    <div class="container--narrow" style="margin:24px auto 80px;">
+        <p>該当商品はありません。</p>
+    </div>
+@endif
+
+{{-- ===== ページネーション ===== --}}
+    @if (method_exists($products, 'links'))
+    <div class="products_pages">
+        {{ $products->links() }}
+    </div>
+@endif
+
 </div>
 @endsection
