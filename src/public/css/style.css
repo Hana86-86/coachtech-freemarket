@@ -1186,7 +1186,7 @@ body {
 .pc-summary__buy { margin-top:16px; }
 .pc-error { margin-top:12px; color:#c43b3b; font-size:13px; }
 
-/* 共通ボタン（なければ使用） */
+/* 共通ボタン */
 .btn { display:inline-flex; align-items:center; justify-content:center; height:44px; padding:0 16px; border-radius:6px; border:1px solid transparent; cursor:pointer; }
 .btn--primary { background:#e06966; color:#fff; font-weight:700; border-color:rgba(95,95,95,.4); }
 .btn--ghost { background:#fff; color:#111; border-color:rgba(95,95,95,.4); }
@@ -1198,3 +1198,22 @@ body {
   .pc__grid { grid-template-columns: 1fr; }
   .pc__right { order: -1; } /* 右サマリーを上に */
 }
+/* ===== My Page only ===== */
+.profile-page .mp-head{display:flex;align-items:center;gap:16px;margin:8px 0 12px;}
+.profile-page .mp-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;}
+.profile-page .mp-user{display:flex;align-items:center;gap:12px;}
+.profile-page .mp-user__name{font-size:20px;margin:0;}
+.profile-page .mp-divider{border:0;border-top:1px solid var(--color-border,#e6e6e6);margin:12px 0 24px;}
+
+/* 4カラムはマイページ内だけ */
+.profile-page .mp-cards{display:grid;gap:24px;grid-template-columns:repeat(4,1fr);}
+@media (max-width:1200px){.profile-page .mp-cards{grid-template-columns:repeat(3,1fr);}}
+@media (max-width:840px){ .profile-page .mp-cards{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:520px){ .profile-page .mp-cards{grid-template-columns:1fr;}}
+
+/* SOLDをカード左上に固定（マイページ内だけ） */
+.profile-page .mp-thumb{position:relative;display:block;}
+.profile-page .mp-thumb .badge--sold{
+  position:absolute;top:8px;left:8px;
+}
+

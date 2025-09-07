@@ -35,8 +35,6 @@ Route::get('/', function () {
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 // 商品詳細 + 数値制約
 Route::get('/products/{product}', [ProductController::class, 'show'])->whereNumber('product')->name('products.show');
-// いいね
-Route::post('/products/{product}/favorite-toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 
 // コンビニ決済
 Route::post('/stripe/webhook',[StripeWebhookController::class, 'handle'])->name('stripe.webhook');
@@ -93,10 +91,13 @@ Route::middleware(['auth','verified'])->group(function () {
     // 決済処理
     Route::post('/purchase/checkout/{id}', [PurchaseController::class, 'checkout'])->name('purchase.checkout');
     Route::get('/purchase/success/{id}', [PurchaseController::class, 'success'])->name('purchase.success');
-    
+
     // 配送先編集
     Route::get('/purchase/address', [ShippingAddressController::class, 'edit'])->name('purchase.address.edit');
     Route::post('/purchase/address',[ShippingAddressController::class, 'update'])->name('purchase.address.update');
+
+    // いいね
+    Route::post('/products/{product}/favorite-toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
 
     // コメント投稿
     Route::post('/products/{product}/comments', [CommentController::class, 'store'])->name('comments.store');
@@ -110,7 +111,7 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::put('/profile',[ProfileController::class, 'update'])->name('profile.update');
     // プロフィール画像削除
     Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
-    
+
     // 出品者用
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');

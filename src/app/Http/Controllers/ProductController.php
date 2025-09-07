@@ -11,20 +11,6 @@ use App\Http\Requests\ProductUpdateRequest;
 
 class ProductController extends Controller
 {
-    public function currentFavoriteOwner(Request $request):array
-    {
-        if(auth()->check()) {
-            return ['column' => 'user_id','value' => auth()->id()];
-        }
-        // ゲスト用トークン
-        $token = $request->cookie('vtoken');
-        if(!$token) {
-            $token = (string) \Illuminate\Support\Str::uuid();
-            cookie()->queue(cookie('vtoken', $token, 60*24*365)); // 1年
-        }
-        return ['column' => 'visitor_token', 'value' => $token];
-    }
-
     // 商品一覧（おすすめ / マイリスト + キーワード検索）
     public function index(Request $request)
     {
@@ -38,7 +24,7 @@ class ProductController extends Controller
             if (auth()->check()) {
                 $query->whereHas('favorites', fn($query) => $query->where('user_id', auth()->id() ));
             } else {
-                $query->whereRaw('0=1');
+                $query->whereRaw('1=0');
             }
         }
         // 自分の商品は一覧から除外
@@ -80,14 +66,16 @@ class ProductController extends Controller
         $product->loadCount(['favorites', 'comments'])
                 ->load(['category', 'comments.user', 'user']);
 
-        $owner = $this->currentFavoriteOwner($request);
+        $isFavorited = false;
+        if (auth()->check()) {
         $isFavorited = $product->favorites()
-                    ->where($owner['column'], $owner['value'])
-                    ->exists();
+            ->where('user_id', auth()->id())
+            ->exists();
+    }
 
-        $isOwner = auth()->check() && $product->user_id === auth()->id();
+    $isOwner = auth()->check() && $product->user_id === auth()->id();
 
-        return view('products.show', compact('product', 'isOwner', 'isFavorited'));
+    return view('products.show', compact('product', 'isOwner', 'isFavorited'));;
 }
     // 出品編集フォーム
     public function edit(Product $product)

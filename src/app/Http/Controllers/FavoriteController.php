@@ -12,26 +12,19 @@ class FavoriteController extends Controller
 {
     public function toggle(Request $request, Product $product)
 {
-        if (auth()->check()) {
-        $col = 'user_id';
-        $val = auth()->id();
-    } else {
-        $token = $request->cookie('vtoken');
-        if (!$token) {
-            $token = (string) \Illuminate\Support\Str::uuid();
-            cookie()->queue(cookie('vtoken', $token, 60*24*365)); // 1年
-        }
-        $col = 'visitor_token';
-        $val = $token;
+    if (!auth()->check()) {
+        return response()->json(['error' => 'Unauthorized'], 401);
     }
 
-    $query = $product->favorites()->where($col, $val);
+    $userId = auth()->id();
+
+    $query = $product->favorites()->where('user_id', $userId);
 
     $favorited = false;
     if ($query->exists()) {
-        $query->delete();        // 解除
+        $query->delete();
     } else {
-        $product->favorites()->create([$col => $val]); // 付与
+        $product->favorites()->create(['user_id' => $userId]);
         $favorited = true;
     }
 

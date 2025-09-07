@@ -26,24 +26,44 @@
             <span class="tax-note">（税込）</span>
         </div>
 
-    {{-- 星（いいね）とコメント数  --}}
-    <div class="meta_bar">
-        <button
-            id="favButton"
-            class="fav-btn {{ $isFavorited ? 'is-on' : '' }}"
-            aria-pressed="{{ $isFavorited ? 'true' : 'false' }}"
-            aria-label="いいね"
-            data-url="{{ route('favorites.toggle', $product) }}"
-        >
-        <span class="fav-btn__icon" aria-hidden="true">{{ $isFavorited ? '★' : '☆' }}</span>
-        <span id="favCount" class="meta_num">{{ $product->favorites_count ?? $product->favorites()->count() }}</span>
-        </button>
+    {{-- 星（いいね）とコメント数 --}}
+<div class="meta_bar">
+  @auth
+    <button
+        id="favButton"
+        type="button"
+        class="fav-btn {{ $isFavorited ? 'is-on' : '' }}"
+        aria-pressed="{{ $isFavorited ? 'true' : 'false' }}"
+        aria-label="お気に入りに{{ $isFavorited ? '登録済み' : '登録' }}"
+        data-url="{{ route('favorites.toggle', $product) }}"
+    >
+        <span id="star" class="fav-btn__icon" aria-hidden="true">
+        {{ $isFavorited ? '★' : '☆' }}
+        </span>
+        <span id="favCount" class="meta_num">
+        {{ $product->favorites_count ?? $product->favorites()->count() }}
+        </span>
+</button>
+@endauth
 
-        <span class="meta_sep">・</span>
+@guest
+    {{-- 未ログイン時はログインへ導線 --}}
+    <a href="{{ route('login') }}" class="btn btn-ghost"
+        aria-label="ログインしてお気に入りに登録する">
+        ☆
+    </a>
+    <span class="meta_num">
+        {{ $product->favorites_count ?? $product->favorites()->count() }}
+    </span>
+@endguest
 
-        <span class="meta_icon" aria-hidden="true">💬</span>
-        <span class="meta_num">{{ $product->comments_count ?? $product->comments()->count() }}</span>
-    </div>
+    <span class="meta_sep"></span>
+
+    <span class="meta_icon" aria-hidden="true">💬</span>
+    <span class="meta_num">
+    {{ $product->comments_count ?? $product->comments()->count() }}
+    </span>
+</div>
 
     {{-- 購入ボタン（売り切れ時は非活性） --}}
 
@@ -121,40 +141,50 @@
 </aside>
 </div>
 
+@auth
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('favButton');
-    if (!btn) return;
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('favButton');
+        if (!btn) return;
 
-    btn.addEventListener('click', async () => {
-    const url = btn.dataset.url;
-    try {
-    const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-        'Accept': 'application/json'
-        }
-    });
-    if (!res.ok) { console.warn('favorite failed', res.status); return; }
+        btn.addEventListener('click', async () => {
+        const url = btn.dataset.url;
+        try {
+        const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+            });
 
-    const data = await res.json();
+            if (res.status === 401) {
+              // ログイン切れなど
+                location.href = "{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}";
+                return;
+            }
+            if (!res.ok) return;
 
-    btn.setAttribute('aria-pressed', data.favorited ? 'true' : 'false');
-    btn.classList.toggle('is-on', data.favorited);
+            const data = await res.json();
 
-    const star = btn.querySelector('.star');
-    if (star) star.textContent = data.favorited ? '★' : '☆';
+            // ボタン状態の更新
+            btn.setAttribute('aria-pressed', data.favorited ? 'true' : 'false');
+            btn.classList.toggle('is-on', data.favorited);
 
-    const cnt = document.getElementById('favCount');
-    if (cnt) cnt.textContent = data.count;
-    } catch (e) {
-    console.error(e);
-    }
-});
-});
-</script>
-@endpush
+            // ★の表示と数の更新
+            const star = document.getElementById('star');
+            if (star) star.textContent = data.favorited ? '★' : '☆';
+
+            const cnt = document.getElementById('favCount');
+            if (cnt) cnt.textContent = data.count;
+            } catch (e) {
+            console.error(e);
+            }
+        });
+        });
+    </script>
+    @endpush
+@endauth
 @endsection

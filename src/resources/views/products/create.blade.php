@@ -16,7 +16,7 @@ $product = $product ?? null;
         @csrf
         @if($isEdit) @method('PUT') @endif
 
-    {{-- 商品画像 （編集時は現在の画像を見せる＋差し替えは任意）--}}
+    {{-- 商品画像 --}}
     @if($isEdit && $product?->image_path)
         <div class="mb-2">
         <img src="{{ $product->image_url }}" alt="" style="max-width:160px;border-radius:8px;">
