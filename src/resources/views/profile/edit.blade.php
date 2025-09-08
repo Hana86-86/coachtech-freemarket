@@ -12,7 +12,7 @@
         : $initial;
 @endphp
 
-<form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="form-page">
+<form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="form-page" novalidate>
     @csrf
     @method('PUT')
 
@@ -61,12 +61,12 @@
 @push('scripts')
 <script>
   // 画像プレビュー
-  document.getElementById('profile_image')?.addEventListener('change', (e) => {
+document.getElementById('profile_image')?.addEventListener('change', (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
     const url = URL.createObjectURL(f);
     const img = document.getElementById('avatarPreview');
     img.src = url;
-  });
+});
 </script>
 @endpush

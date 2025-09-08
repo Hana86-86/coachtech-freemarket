@@ -8,19 +8,11 @@
     登録していただいたメールアドレスに認証メールを送付しました。<br>
     メール認証を完了してください。</p>
 
-    @php
-        $user = auth()->user();
-        $verifyUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            [
-                'id'   => $user->getKey(,)
-                'hash' => sha1($user->getEmailForVerification()),
-            ]
-        );
-    @endphp
-
-    <a href="{{ $verifyUrl }}" class="btn btn--ghost verify__cta">認証はこちらから</a>
+    <div class="mt-4">
+    <button type="button" class="btn btn-secondary" disabled>
+        認証はこちらから
+    </button>
+</div>
 
     @if (session('status') == 'verification-link-sent')
         <div class="flash flash--success" role="status">新しい認証メールを送信しました！</div>
