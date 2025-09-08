@@ -24,7 +24,7 @@
 
     <div class="form_group">
         <label class="form_label">ユーザー名</label>
-        <input type="text" name="name" class="form_control" value="{{ old('name') }}" required autocomplete="username" inputmode="text">
+        <input type="text" name="name" class="form_control" value="{{ old('name') }}" required autocomplete="nickname" inputmode="text">
         @error('name') <p class="error">{{ $message }}</p> @enderror
     </div>
     <div class="form_group">
@@ -34,7 +34,7 @@
     </div>
     <div class="form_group">
         <label class="form_label">パスワード</label>
-        <input type="password" name="password" class="form_control" required>
+        <input type="password" name="password" class="form_control" required autocomplete="new-password">
         @error('password') <p class="error">{{ $message }}</p>@enderror
     </div>
     <div class="form_group">

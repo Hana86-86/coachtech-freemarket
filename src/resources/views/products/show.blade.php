@@ -114,29 +114,40 @@
     @endforelse
 
     {{-- ログイン中ユーザーのコメント入力 --}}
-    @auth
+@auth
+@can('create', [\App\Models\Comment::class, $product])
     <div class="comment composer">
-        <div class="comment__head">
-        <img class="avatar avatar--sm"
-            src="{{ auth()->user()->profile->profile_image ? asset('storage/'.auth()->user()->profile->profile_image) : asset('images/avatar-placeholder.png') }}"
-            alt="{{ auth()->user()->name }}">
-        <div class="comment__meta">
-            <div class="comment__name">{{ auth()->user()->name }}</div>
+        <div class="comment_head">
+        <div>
+            <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}" class="avatar avatar--sm"/>
+        </div>
+        <div class="comment_meta">
+            <div class="comment_name">{{ auth()->user()->name }}</div>
             <div class="muted">こちらにコメントが入ります。</div>
         </div>
-        </div>
+    </div>
 
-        <form action="{{ route('comments.store', $product) }}" method="POST" class="mt-8">
+    <form action="{{ route('comments.store', $product) }}" method="POST" class="mt-8">
         @csrf
         <textarea name="body" rows="3" class="comment_input" placeholder="コメントを入力（必須・255文字まで）">{{ old('body') }}</textarea>
         @error('body') <p class="error">{{ $message }}</p> @enderror
 
-        <button type="submit" class="btn btn-primary mt-8">コメントを送信する</button>
-        </form>
+        <button type="submit" class="btn btn-primary mt-8">コメントを投稿する</button>
+    </form>
     </div>
-    @else
-        <p class="muted mt-8">※コメントするにはログインしてください。</p>
-    @endauth
+@else
+    {{-- ログインはしているが、ポリシーにより投稿不可（例：売却済み等） --}}
+    <p class="muted mt-8">
+        この商品にはコメントできません。
+        @if($product->sale_status === \App\Models\Product::SALE_STATUS_SOLD)
+        （売却済み）
+        @endif
+    </p>
+@endcan
+@else
+    {{-- ゲスト表示 --}}
+    <p class="muted mt-8">コメントするにはログインしてください。</p>
+@endauth
 
 </aside>
 </div>

@@ -4,6 +4,8 @@ namespace App\Policies;
 
 use App\Models\Comment;
 use App\Models\User;
+use App\Models\Product;
+use App\Models\Purchase;
 use Illuminate\Auth\Access\Response;
 
 class CommentPolicy
@@ -27,9 +29,17 @@ class CommentPolicy
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function create(User $user, Product $product): bool
     {
-        //
+        $isOwner = $product->user_id === $user->id;
+
+        $isBuyer = Purchase::where('product_id', $product->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        $isSold = $product->sale_status === \App\Models\Product::SALE_STATUS_SOLD;
+
+        return !$isOwner && !$isBuyer && !$isSold;
     }
 
     /**

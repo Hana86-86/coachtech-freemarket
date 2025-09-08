@@ -78,8 +78,6 @@ class User extends Authenticatable implements MustVerifyEmail
     if ($path && Storage::disk('public')->exists($path)) {
         return Storage::url($path);
     }
-    return asset('images/avatar-placeholder.png');
+    return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&color=fff';
 }
-
 }
-
