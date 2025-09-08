@@ -16,7 +16,7 @@ class ProductController extends Controller
     {
         $tab   = $request->string('tab')->toString();
         $query = Product::query()
-        ->with('category')
+        ->with('categories')
         ->whereIn('sale_status', [Product::SALE_STATUS_PUBLIC, Product::SALE_STATUS_SOLD]);
 
         // マイリスト（認証ユーザーのみ表示）
@@ -33,7 +33,7 @@ class ProductController extends Controller
         }
             // タブ：おすすめ(=通常一覧)
             $products = $query
-                ->with(['category'])
+                ->with(['categories'])
                 ->withCount(['favorites', 'comments'])
                 ->latest()
                 ->paginate(12)
@@ -47,7 +47,7 @@ class ProductController extends Controller
             $query->where('title', 'like', "%{$keyword}%")
                 ->orWhere('description', 'like', "%{$keyword}%")
                 ->orWhere('brand', 'like', "%{$keyword}%")
-                ->orWhereHas('category', function($query) use ($keyword) {
+                ->orWhereHas('categories', function($query) use ($keyword) {
             $query->where('name', 'like', "%{$keyword}%");
         })
             ->orWhereHas('user', function($query) use ($keyword) {
@@ -64,7 +64,7 @@ class ProductController extends Controller
     public function show(Request $request, Product $product)
     {
         $product->loadCount(['favorites', 'comments'])
-                ->load(['category', 'comments.user', 'user']);
+                ->load(['categories', 'comments.user', 'user']);
 
         $isFavorited = false;
         if (auth()->check()) {
@@ -116,6 +116,8 @@ class ProductController extends Controller
             'sale_status' => Product::SALE_STATUS_PUBLIC,
         ]);
 
+        $product->categories()->sync($request->input('category_id', []));
+
         return redirect()->route('products.show', $product) ->with('success', '出品しました！');
     }
     // 出品更新
@@ -146,6 +148,7 @@ class ProductController extends Controller
         }
 
         $product->update($data);
+        $product->categories()->sync($request->input('category_id', []));
 
         return redirect()->route('products.show', $product)
             ->with('success', '商品情報を更新しました。');
@@ -159,5 +162,5 @@ class ProductController extends Controller
         return view('products.create', compact('categories', 'conditions'));
     }
 
-    
+
 }

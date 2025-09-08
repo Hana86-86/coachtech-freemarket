@@ -70,7 +70,7 @@ Route::post('/email/verification-notification', function (Request $request) {
 //認証は必要だが verified は不要
 //===========================
 Route::middleware(['auth'])->group(function () {
-    Route::get('/profile/create', [ProfileController::class, 'create'])->name('profile.create');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'store'])->name('profile.store');
 });
 
@@ -107,7 +107,7 @@ Route::middleware(['auth','verified'])->group(function () {
     // マイページ（プロフィール確認 + 出品/購入一覧
     Route::get('/profile',[ProfileController::class,'show'])->name('profile.show');
     // プロフィール編集
-    Route::get('/profile/edit',[ProfileController::class, 'edit'])->name('profile.edit');
+    
     Route::put('/profile',[ProfileController::class, 'update'])->name('profile.update');
     // プロフィール画像削除
     Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
