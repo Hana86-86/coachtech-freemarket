@@ -70,7 +70,7 @@ Route::post('/email/verification-notification', function (Request $request) {
 //認証は必要だが verified は不要
 //===========================
 Route::middleware(['auth'])->group(function () {
-    Route::get('/profile/create', [ProfileController::class, 'create'])->name('profile.create');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'store'])->name('profile.store');
 });
 
