@@ -57,7 +57,7 @@ class PurchaseController extends Controller
             'metadata' => [
                 'product_id' => (string) $product->id,
                 'seller_id'  => (string) $product->user_id,
-                'user_id'   => (string) auth()->id(),
+                'buyer_id'   => (string) auth()->id(),
             ],
         ],
         'success_url' => route('purchase.success', ['id' => $product->id]) . '?session_id={CHECKOUT_SESSION_ID}',
@@ -71,6 +71,28 @@ class PurchaseController extends Controller
         }
 
         $session = StripeSession::create($params);
+
+        // コンビニはここで予約（SOLD）& 購入レコードPENDINGを作る
+        if ($method === 'konbini') {
+            \DB::transaction(function () use ($product, $session) {
+                if ($product->sale_status !== Product::SALE_STATUS_SOLD) {
+                    $product->update(['sale_status' => Product::SALE_STATUS_SOLD]);
+                }
+                Purchase::firstOrCreate(
+                    ['session_id' => $session->id],
+                    [
+                        'session_id'  => $session->id,
+                        'buyer_id'      => auth()->id(),
+                        'product_id'   => $product->id,
+                        'amount'       => $product->price,
+                        'payment_method' => 'konbini',
+                        'status'         => Purchase::STATUS_AWAITING,
+                        'payment_intent_id' => $session->payment_intent ?? null,
+                    ]
+                    );
+            });
+        }
+
         return redirect($session->url);
     }
 
@@ -102,7 +124,7 @@ class PurchaseController extends Controller
                 Purchase::firstOrCreate(
                     ['payment_intent_id' => $pi->id],
                     [
-                        'user_id'       => auth()->id(),
+                        'buyer_id'       => auth()->id(),
                         'product_id'     => $product->id,
                         'amount'         => $product->price,
                         'payment_method' => $method,

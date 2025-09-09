@@ -49,6 +49,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
     ];
 
+    public function purchases()
+    {
+        return $this->hasMany(Purchase::class, 'buyer_id');
+    }
+
     public function profile()
     {
         return $this->hasOne(Profile::class);
@@ -66,7 +71,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Product::class);
     }
-    public function purchases()
+    public function purchase()
     {
         return $this->hasMany(Purchase::class);
     }

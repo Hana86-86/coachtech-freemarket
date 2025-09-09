@@ -15,31 +15,28 @@ class StripeWebhookController extends Controller
     public function handle(Request $request)
     {
         $payload = $request->getContent();
-        $sig     = $request->header('Stripe-Signature');
+        $sigHeader     = $request->header('Stripe-Signature');
         $secret  = env('STRIPE_WEBHOOK_SECRET');
 
         try {
-            $event = StripeWebhook::constructEvent($payload, $sig, $secret);
-        } catch (\Throwable $e) {
-            Log::warning('Stripe webhook signature error: '.$e->getMessage());
-            return response('bad signature', 400);
+            $event = \Stripe\Webhook::constructEvent($payload, $sig, $secret);
+        }   catch(\UnexpectedValueException|\Stripe\Exception\SignatureVerificationException $e) {
+            return response('invalid', 400);
         }
-        // コンビニは「実際の支払い完了」でpayment_intent_succeededが飛ぶ
-        if ($event->type === 'payment_intent.succeeded') {
-            $pi = $event->data->object;
-        // checkout作成時の metadata　を使って特定
-            $productId = (int)($pi->metadata->product_id ?? 0);
-            $buyerId   = (int)($pi->metadata->buyer_id ?? 0);
-            $method    = $pi->payment_method_types[0] ?? 'unknown';
+            switch ($event->type) {
+                case 'payment_intent.succeeded';
+                {
+                    $pi = $event->data->object;
+                    $piId      = $pi->id;
+                    $productId = (int)($pi->metadata->product_id ?? 0);
+                    $buyerId   = (int)($pi->metadata->buyer_id ?? 0);
+                    $method    = $pi->payment_method_type[0] ?? 'unknown';
+                    $amount    = (int)($pi->amount ?? 0)/100;
 
-            if ($productId && $buyerId) {
-                $product = Product::find($productId);
-
-                if ($product) {
-                    DB::transaction(function () use ($pi, $product, $buyerId, $method) {
-                    // 購入確定
-                     Purchase::updateOrCreate(
-                        ['payment_intent_id' => $pi->id],
+                    DB::transaction(function () use ($piId, $productId, $buyerId, $method,$amount) {
+                    // 取引レコード更新・作成
+                    Purchase::updateOrCreate(
+                        ['payment_intent_id' => $piId],
                         [
                             'buyer_id'       => $buyerId,
                             'product_id'     => $product->id,
@@ -49,14 +46,16 @@ class StripeWebhookController extends Controller
                             'payd_at'        => now(),
                         ]
                         );
-                        if ($product->sale_status !== Product::SALE_STATUS_SOLD) {
+                        $product = Product::find($productId);
+                        if ($product && $product->sale_status !== Product::SALE_STATUS_SOLD) {
                             $product->update(['sale_status' => Product::SALE_STATUS_SOLD]);
                         }
                 });
-            }
+            return response('ok', 200);
         }
     }
 
         return response('ok', 200);
-    }
+
+}
 }
