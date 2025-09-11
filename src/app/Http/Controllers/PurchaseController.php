@@ -16,7 +16,12 @@ class PurchaseController extends Controller
 {
     public function confirm(Request $request,$id)
     {
+
         $product = Product::findOrFail($id);
+
+        if ($product->user_id === auth()->id()) {
+        return back()->withErrors('自分が出品した商品は購入できません。');
+    }
         //デフォルトは Card
         $paymentMethod = $request->query('payment_method','card');
 

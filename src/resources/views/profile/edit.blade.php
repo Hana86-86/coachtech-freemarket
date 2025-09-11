@@ -20,7 +20,10 @@
 
     {{-- アバター＆アップロード --}}
     <div class="profile-head">
-        <img id="avatarPreview" src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="avatar" />
+        <img id="avatarPreview"
+        src="{{ $profile->image_url }}"
+        alt="{{ $user->name }}"
+        class="avatar">
         <label for="profile_image" class="btn btn-outline btn-md">画像を選択する</label>
         <input type="file" id="profile_image" name="profile_image" accept="image/*" class="visually-hidden">
         @error('profile_image') <p class="error">{{ $message }}</p> @enderror

@@ -101,16 +101,12 @@ Route::middleware(['auth','verified'])->group(function () {
 
     // コメント投稿
     Route::post('/products/{product}/comments', [CommentController::class, 'store'])->name('comments.store');
-    // コメント削除
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
-
+    
     // マイページ（プロフィール確認 + 出品/購入一覧
     Route::get('/profile',[ProfileController::class,'show'])->name('profile.show');
     // プロフィール編集
     Route::get('/profile/edit',[ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile',[ProfileController::class, 'update'])->name('profile.update');
-    // プロフィール画像削除
-    Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
 
     // 出品者用
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');

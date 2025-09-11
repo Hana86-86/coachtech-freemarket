@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\Favorite;
+use App\Models\Product;
+use App\Models\Category;
 
 class Product extends Model
 {
@@ -17,7 +19,6 @@ class Product extends Model
         'brand',
         'description',
         'price',
-        'category_id',
         'image_path',
         'condition',
         'sale_status',
@@ -49,9 +50,16 @@ class Product extends Model
         return $this->hasMany(Purchase::class);
     }
 
-    public function category()
+    public function categories()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsToMany(Category::class, 'category_product')
+        ->withTimestamps();
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'category_product')
+        ->withTimestamps();
     }
 
     public function favorites()

@@ -989,7 +989,7 @@ body {
   color: #111;
 }
 
-/* 共通フォーム要素（Figma 高さ・角丸） */
+/* 共通フォーム要素 */
 .select,
 .input,
 .textarea {
@@ -1003,7 +1003,7 @@ body {
 
 .select,
 .input {
-  height: 55px;          /* Figma 55px */
+  height: 55px;
   padding: 0 12px;
 }
 

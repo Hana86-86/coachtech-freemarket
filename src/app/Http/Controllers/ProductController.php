@@ -16,7 +16,7 @@ class ProductController extends Controller
     {
         $tab   = $request->string('tab')->toString();
         $query = Product::query()
-        ->with('category')
+        ->with('categories')
         ->whereIn('sale_status', [Product::SALE_STATUS_PUBLIC, Product::SALE_STATUS_SOLD]);
 
         // マイリスト（認証ユーザーのみ表示）
@@ -33,7 +33,7 @@ class ProductController extends Controller
         }
             // タブ：おすすめ(=通常一覧)
             $products = $query
-                ->with(['category'])
+                ->with(['categories'])
                 ->withCount(['favorites', 'comments'])
                 ->latest()
                 ->paginate(12)
@@ -47,7 +47,7 @@ class ProductController extends Controller
             $query->where('title', 'like', "%{$keyword}%")
                 ->orWhere('description', 'like', "%{$keyword}%")
                 ->orWhere('brand', 'like', "%{$keyword}%")
-                ->orWhereHas('category', function($query) use ($keyword) {
+                ->orWhereHas('categories', function($query) use ($keyword) {
             $query->where('name', 'like', "%{$keyword}%");
         })
             ->orWhereHas('user', function($query) use ($keyword) {
@@ -64,7 +64,7 @@ class ProductController extends Controller
     public function show(Request $request, Product $product)
     {
         $product->loadCount(['favorites', 'comments'])
-                ->load(['category', 'comments.user', 'user']);
+                ->load(['categories', 'comments.user', 'user']);
 
         $isFavorited = false;
         if (auth()->check()) {
@@ -102,19 +102,20 @@ class ProductController extends Controller
             $saved = $request->file('image')->store('products/'.now()->format('Y/m'), 'public');
             $path  = 'storage/' . $saved;
         }
-
         $product = Product::create([
+
             'user_id'     => auth()->id(),
             'title'       => $validated['title'],
             'brand'       => $validated['brand'] ?? null,
             'description' => $validated['description'],
-            'category_id' => $validated['category_id'],
             'condition'   => $validated['condition'],
             'price'       => $validated['price'],
             'image_path'  => $path,
             // 公開/売却済み
             'sale_status' => Product::SALE_STATUS_PUBLIC,
         ]);
+        // * 複数カテゴリを中間テーブルへ
+        $product->categories()->sync($validated['category_id']);
 
         return redirect()->route('products.show', $product) ->with('success', '出品しました！');
     }
@@ -129,7 +130,6 @@ class ProductController extends Controller
             'title'       => $validated['title'],
             'brand'       => $validated['brand'] ?? null,
             'description' => $validated['description'],
-            'category_id' => $validated['category_id'],
             'condition'   => $validated['condition'],
             'price'       => $validated['price'],
         ];
@@ -146,6 +146,8 @@ class ProductController extends Controller
         }
 
         $product->update($data);
+        // pivotを同期
+        $product->categories()->sync($validated['category_id']);
 
         return redirect()->route('products.show', $product)
             ->with('success', '商品情報を更新しました。');

@@ -23,12 +23,5 @@ class CommentController extends Controller
         return back()->with('success', 'コメントを投稿しました。');
 
     }
-    public function destroy(Comment $comment)
-    {
-        $this->authorize('delete', $comment);
-
-        $comment->delete();
-
-        return back()->with('success', 'コメントを削除しました。');
-    }
+    
 }

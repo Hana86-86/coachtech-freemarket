@@ -67,8 +67,11 @@
 
     {{-- 購入ボタン（売り切れ時は非活性） --}}
 
-        @php $isSold = $product->sale_status === \App\Models\Product::SALE_STATUS_SOLD; @endphp
-        @if ($isSold)
+        @php
+            $isSold = $product->sale_status === \App\Models\Product::SALE_STATUS_SOLD;
+            $isOwner = auth()->check() && $product->user_id === auth()->id();
+        @endphp
+        @if ($isSold || $isOwner)
         <button class="buy-button w-full" disabled aria-disabled="true">購入手続きへ</button>
         @else
         @guest

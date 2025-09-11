@@ -24,7 +24,7 @@ class ProfileRequest extends FormRequest
         return [
             'name'          => ['required', 'string', 'max:20'],
             // 15MB, 画像のみ, 4000px 超は不可
-            'profile_image' => ['nullable','image','mimes:jpeg,jpg,png,webp','max:15360','dimensions:max_width=4000,max_height=4000'],
+            'profile_image' => ['nullable','image','mimes:jpeg,jpg,png','max:2048'],
             'postal_code'   => ['required', 'string', 'regex:/^\d{3}-\d{4}$/'], // 123-4567形式のみ許可
             'address'       => ['required', 'string', 'max:255'],
             'building'      => ['nullable', 'string', 'max:255'],

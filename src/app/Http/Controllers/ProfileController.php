@@ -19,7 +19,10 @@ class ProfileController extends Controller
 
         $myProducts = $user->products()->latest()->get();
 
-        $purchases = $user->purchases()->with('product')->latest('paid_at')->get();
+        $purchases = $user->purchases()
+            ->with('product')
+            ->latest('paid_at')
+            ->get();
 
         return view('profile.show', [
             'user'    => $user,
@@ -37,26 +40,26 @@ class ProfileController extends Controller
     public function update(ProfileRequest $request)
     {
         $user = $request->user();
-
         $validated = $request->validated();
 
         $profile = Profile::firstOrNew(['user_id' => $user->id]);
 
-        $path = $profile->profile_image;
+        // 画像差し替え（古いファイル削除 → 新規保存）
         if ($request->hasFile('profile_image')) {
         if (!empty($profile->profile_image)) {
             Storage::disk('public')->delete($profile->profile_image);
         }
+        $profile->profile_image = $request->file('profile_image')
+                                            ->store('profile_images', 'public');
 
-        $path = $request->file('profile_image')->store('profile_images', 'public');
     }
+        $user->update(['name' => $validated['name']]);
 
     $profile->fill([
         'name'         => $validated['name'],
         'postal_code'  => $validated['postal_code'],
         'address'      => $validated['address'],
         'building'     => $validated['building'] ?? null,
-        'profile_image'=> $path,
         ])->save();
 
     // 初回ログインフラグ更新
@@ -69,18 +72,6 @@ class ProfileController extends Controller
     return $wasFirst
         ? redirect()->route('products.index')->with('success', 'プロフィールを登録しました。')
         : redirect()->route('profile.edit')->with('success', 'プロフィールを更新しました。');
-}
-    public function destroyAvatar()
-    {
-        $user    = auth()->user();
-        $profile = Profile::firstWhere('user_id', $user->id);
-
-        if ($profile?->profile_image) {
-            Storage::disk('public')->delete($profile->profile_image);
-            $profile->update(['profile_image' => null]);
-        }
-
-        return back()->with('success', 'プロフィール画像を削除しました。');
     }
 
     // 購入履歴

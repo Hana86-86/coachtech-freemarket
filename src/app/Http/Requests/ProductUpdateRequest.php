@@ -26,14 +26,12 @@ class ProductUpdateRequest extends FormRequest
         return [
             // 画像：必須・拡張子・最大４MB
             'image'       => ['nullable','image','mimes:jpeg,png,jpg','max:4096'],
-            // テキスト類
             'title'       => ['required','string','max:255'],
             'brand'       => ['nullable','string','max:255'],
             'description' => ['required','string','max:2000'],
-            // セレクト類
-            'category_id' => ['required','exists:categories,id'],
+            'category_id.*' => ['integer','exists:categories,id'],
+            'category_id'   => ['required', 'array', 'min:1'],
             'condition'   => ['required','string',\Illuminate\Validation\Rule::in($conditions)],
-            // 価格
             'price'       => ['required','integer','min:1'], // 価格は1以上
 
         ];
