@@ -5,9 +5,6 @@
 検索 UI/ロジックを共通化して、商品一覧とマイリスト（お気に入り）で同じ操作感を実現。
 Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 
-• Web: http://localhost:8081
-• phpMyAdmin: http://localhost:8080
-
 ・使用技術
 
 - PHP 8.2
@@ -20,7 +17,7 @@ Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 
 ・環境構築手順
 
-1. git clone git@github.com:ユーザー名/coachtech-freemarket.git
+1. git clone git@github.com:Hana86-86/coachtech-freemarket.git
 
 - cd coachtech-freemarket
 
@@ -56,7 +53,7 @@ Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 
 7. php artisan storage:link
 
-8. LaravelFortify インストール
+8. LaravelFortify 「インストール済み」
 
 - composer require laravel/fortify
 
@@ -68,9 +65,11 @@ Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 
 10. マイグレーション実行
 
-- php artisan migrate
+- php artisan migrate --seed
 
-
+動作確認 URL
+• Web: http://localhost:8081
+• phpMyAdmin: http://localhost:8080
 
 ![ER図](er-diagram.png)
 
@@ -123,6 +122,3 @@ STRIPE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxx
 STRIPE_SECRET=sk_test_xxxxxxxxxxxxxxxxxxxxx
 
 ---
-
-
-
