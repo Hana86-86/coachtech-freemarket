@@ -161,5 +161,5 @@ class ProductController extends Controller
         return view('products.create', compact('categories', 'conditions'));
     }
 
-    
+
 }

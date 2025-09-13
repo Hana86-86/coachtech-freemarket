@@ -14,6 +14,7 @@ return new class extends Migration
     {
         if (Schema::hasTable('category_product') && Schema::hasColumn('products', 'category_id')) {
             DB::table('products')
+                ->select('id', 'category_id')
                 ->whereNotNull('category_id')
                 ->orderBy('id')
                 ->chunkById(500, function ($rows) {

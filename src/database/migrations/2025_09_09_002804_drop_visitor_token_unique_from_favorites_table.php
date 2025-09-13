@@ -11,17 +11,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('favorites', function (Blueprint $table) {
+        if (Schema::hasTable('favorites')) {
 
-            $table->dropForeign(['product_id']);
+        if (Schema::hasColumn('favorites', 'visitor_token')) {
 
-            $table->dropUnique('favorites_product_id_visitor_token_unique');
+            $exists = collect(DB::select(
+                "SHOW INDEX FROM favorites WHERE Key_name = 'favorites_product_id_visitor_token_unique'"
+            ))->isNotEmpty();
 
+            Schema::table('favorites', function (Blueprint $table) use ($exists) {
+                $table->dropForeign(['product_id']);
 
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-        });
+                if ($exists) {
+                    $table->dropUnique('favorites_product_id_visitor_token_unique');
+                }
+
+                $table->foreign('product_id')
+                        ->references('id')->on('products')
+                        ->onDelete('cascade');
+            });
+        }
     }
-
+    }
     /**
      * Reverse the migrations.
      */

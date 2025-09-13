@@ -34,8 +34,6 @@ class ProductStoreRequest extends FormRequest
             'condition'   => ['required','string',Rule::in($conditions)],
             'price'       => ['required','integer','min:1'], // 価格は1以上
 
-            'category_id'   => ['required','array','min:1'],
-            'category_id.*' => ['integer','exists:categories,id'],
         ];
     }
 

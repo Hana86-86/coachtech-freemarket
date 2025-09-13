@@ -33,8 +33,9 @@ class ProfileController extends Controller
 
     public function edit()
     {
-        $profile = Profile::firstWhere('user_id', auth()->id());
-        return view('profile.edit', compact('profile'));
+        $user = auth()->user();
+        $profile = Profile::firstWhere('user_id', $user->id);
+        return view('profile.edit', compact('profile', 'user'));
     }
 
     public function update(ProfileRequest $request)

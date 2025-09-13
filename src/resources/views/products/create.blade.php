@@ -40,23 +40,27 @@ $product = $product ?? null;
     {{-- カテゴリ --}}
 <div class="chips" role="group" aria-label="カテゴリー">
     @php
-    // 編集時は関連のID配列、作成時は old()
-    $checkedIds = old('category_id', isset($product)
+    $checkedIds = collect(old('category_id', isset($product)
         ? $product->categories->pluck('id')->all()
-        : []);
+        : []
+        ))->map(fn($v) => (int)$v)->all();
     @endphp
 
     @foreach($categories as $cat)
+<label class="chip">
     <input
         type="checkbox"
         id="cat-{{ $cat->id }}"
         name="category_id[]"
         value="{{ $cat->id }}"
         class="chip_input"
-        @checked(in_array($cat->id, $checkedIds, true))
+        @checked(in_array((int)$cat->id, $checkedIds, true))
     >
-    <label for="cat-{{ $cat->id }}" class="chip">{{ $cat->name }}</label>
-    @endforeach
+    <span class="chip_label">{{ $cat->name }}</span>
+</label>
+@endforeach
+
+
     @error('category_id') <p class="error">{{ $message }}</p> @enderror
     @error('category_id.*') <p class="error">{{ $message }}</p> @enderror
 </div>

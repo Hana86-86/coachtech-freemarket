@@ -126,19 +126,23 @@ class ProductsTableSeeder extends Seeder
                     ->value('id');
             }
 
-            DB::table('products')->insert([
+            $productId = DB::table('products')->insertGetId([
                 'user_id' => $row['user_id'],
                 'title' => $row['title'],
                 'brand' => $row['brand'] ?? null,
                 'description' => $row['description'] ?? null,
-                'category_id' => $categoryId,
                 'price' => $row['price'],
                 'condition' => $row['condition'],
                 'image_path' => 'storage/products/' . $row['image_file'],
-                'sale_status' => '公開中',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            if ($categoryId) {
+                DB::table('category_product')->updateOrInsert(
+                    ['product_id' => $productId, 'category_id' => $categoryId],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+            }
         }
 
 

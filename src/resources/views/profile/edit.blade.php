@@ -3,14 +3,6 @@
 @section('title', 'プロフィール設定')
 
 @section('content')
-@php
-    $user  = auth()->user();
-    $initial = 'https://ui-avatars.com/api/?name=' . urlencode($user->name ?? 'U') .
-            '&background=random&color=fff&size=96';
-    $avatarUrl = !empty($user->profile_image)
-        ? asset('storage/' . $user->profile_image)
-        : $initial;
-@endphp
 
 <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="form-page" novalidate>
     @csrf
@@ -21,9 +13,9 @@
     {{-- アバター＆アップロード --}}
     <div class="profile-head">
         <img id="avatarPreview"
-        src="{{ $profile->image_url }}"
+        src="{{ $user->avatar_url }}"
         alt="{{ $user->name }}"
-        class="avatar">
+        class="avatar" />
         <label for="profile_image" class="btn btn-outline btn-md">画像を選択する</label>
         <input type="file" id="profile_image" name="profile_image" accept="image/*" class="visually-hidden">
         @error('profile_image') <p class="error">{{ $message }}</p> @enderror

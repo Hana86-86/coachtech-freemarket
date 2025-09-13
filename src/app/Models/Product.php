@@ -24,8 +24,8 @@ class Product extends Model
         'sale_status',
     ];
 
-    public const SALE_STATUS_PUBLIC = 'public';
-    public const SALE_STATUS_SOLD = 'sold';
+    public const SALE_STATUS_PUBLIC = '公開中';
+    public const SALE_STATUS_SOLD = '売却済み';
 
 
     public static function getSaleStatusLabel($status)

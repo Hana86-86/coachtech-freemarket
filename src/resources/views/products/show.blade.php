@@ -89,7 +89,13 @@
         <dl class="spec">
     <div class="spec__row">
         <dt>カテゴリー</dt>
-        <dd>{{ optional($product->category)->name ?? '—' }}</dd>
+        <dd>
+            @if($product->categories->isNotEmpty())
+                {{ $product->categories->pluck('name')->join(' / ') }}
+            @else
+                —
+            @endif
+        </dd>
     </div>
     <div class="spec__row">
         <dt>商品の状態</dt>
@@ -102,9 +108,9 @@
         @forelse ($product->comments as $comment)
         <div class="comment">
         <div class="comment__head">
-            <img class="avatar avatar--sm"
-                src="{{ $comment->user->profile->profile_image ? asset('storage/'.$comment->user->profile->profile_image) : asset('images/avatar-placeholder.png') }}"
-                alt="{{ $comment->user->name }}">
+            <img src="{{ $comment->user->avatar_url }}"
+            alt="{{ $comment->user->name }}"
+            class="avatar avatar-sm" />
         <div class="comment__meta">
             <div class="comment__name">{{ $comment->user->name }}</div>
             <div class="muted">{{ $comment->created_at->diffForHumans() }}</div>
@@ -122,7 +128,9 @@
     <div class="comment composer">
         <div class="comment_head">
         <div>
-            <img src="{{ auth()->user()->avatar_url }}" alt="{{ auth()->user()->name }}" class="avatar avatar--sm"/>
+            <img src="{{ auth()->user()->avatar_url }}"
+            alt="{{ auth()->user()->name }}"
+            class="avatar avatar-sm" />
         </div>
         <div class="comment_meta">
             <div class="comment_name">{{ auth()->user()->name }}</div>

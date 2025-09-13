@@ -29,7 +29,6 @@ class UserSeeder extends Seeder
         Profile::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'phone' => '09012345678',
                 'postal_code' => '1234567',
                 'address' => '東京都渋谷区1-1-1',
                 'building' => 'テストビル101',

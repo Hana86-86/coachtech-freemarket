@@ -54,19 +54,23 @@ Laravel 10 ＋　 Fortify を使用し、Docker 環境で動作します。
 - cd src
 - php artisan key:generate
 
-7. LaravelFortify インストール
+7. php artisan storage:link
+
+8. LaravelFortify インストール
 
 - composer require laravel/fortify
 
-8. FortifyServiceProvider 作成
+9. FortifyServiceProvider 作成
 
 - php artisan make:provider FortifyServiceProvider
   作成後、config/app.php の providers に以下追記
 - App\Providers\FortifyServiceProvider::class,
 
-9. マイグレーション実行
+10. マイグレーション実行
 
 - php artisan migrate
+
+
 
 ![ER図](er-diagram.png)
 

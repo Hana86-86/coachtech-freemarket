@@ -11,11 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->enum('sale_status',['公開中','取引中','売却済み','公開停止'])
-            ->default('公開中')
-            ->change();
-        });
+        DB::statement("ALTER TABLE products MODIFY sale_status ENUM('public', 'sold') NOT NULL DEFAULT 'public'");
     }
 
     /**
@@ -23,10 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->enum('sale_status',['公開中','取引中','売却済'])
-            ->default('公開中')
-            ->change();
-        });
+        DB::statement("ALTER TABLE products MODIFY sale_status ENUM('公開中', '取引中', '売却済み', '公開停止') NOT NULL DEFAULT '公開中'");
     }
 };
