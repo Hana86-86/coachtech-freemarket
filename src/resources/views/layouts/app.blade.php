@@ -25,12 +25,10 @@
       <form action="{{ route('products.index') }}" method="GET" class="nav_search" role="search">
         <input type="text" name="keyword" class="nav_search_input"
               placeholder="何をお探しですか？"
-              value="{{ request('keyword') }}"
-              autocomplete="off">
+              value="{{ request('keyword') }}">
 
-        @if(request('tab'))
-          <input type="hidden" name="tab" value="{{ request('tab') }}">
-        @endif
+          <input type="hidden" name="tab" value="{{ request('tab', 'all') }}">
+
       </form>
 
       {{-- 右端スペーサー（フレックスの余白） --}}

@@ -19,7 +19,7 @@ class LoginResponse implements LoginResponseContract
     }
     //プロフィール未登録チェック
     if ($user->is_first_login || !$user->profile_completed) {
-    return redirect()->route('profile.create');
+    return redirect()->route('profile.edit');
 }
 
     // 通常ログイン（商品一覧へ）

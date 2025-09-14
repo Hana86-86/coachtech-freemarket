@@ -91,5 +91,35 @@ class Product extends Model
     {
         return $query->whereIn('sale_status', [self::SALE_STATUS_PUBLIC, self::SALE_STATUS_SOLD]);
     }
+
+    public function scopeFilter($query, array $filters): void
+    {
+        $query->when($filters['keyword'] ?? null, function ($q, $kw) {
+        $q->where(function ($q) use ($kw) {
+            $q->where('title', 'like', "%{$kw}%")
+                ->orWhere('brand', 'like', "%{$kw}%")
+                ->orWhere('description', 'like', "%{$kw}%");
+        });
+    });
+        $query->when($filters['category_id'] ?? null, fn($query, $categoryId)  =>
+            $query->whereHas('categories', fn($query) =>
+                $query->where('categories.id', $categoryId)
+            )
+        );
+        $query->when($filters['min_price'] ?? null, fn($query, $minPrice)  =>
+            $query->where('price', '>=', $minPrice)
+        );
+        $query->when($filters['max_price'] ?? null, fn($query, $maxPrice)  =>
+            $query->where('price', '<=', $maxPrice)
+        );
+        $query->when($filters['condition'] ?? null, fn($query, $condition)  =>
+            $query->where('condition', $condition)
+        );
+        $query->when($filters['sale_status'] ?? null, fn($query, $saleStatus)  =>
+            $query->where('sale_status', $saleStatus)
+        );
+
+    }
 }
+
 

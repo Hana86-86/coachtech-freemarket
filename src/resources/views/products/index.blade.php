@@ -3,15 +3,15 @@
 @section('title', '商品一覧')
 
 @section('content')
-<div class="products-index"><!--  一覧専用スコープ -->
+<div class="products-index">
 
 {{-- ===== タブ（おすすめ / マイリスト） ===== --}}
 <nav class="products_tabs">
-    <a href="{{ route('products.index', ['tab' => null]) }}"
-        class="products_tab {{ request('tab') ? '' : 'is-active' }}">
+    <a href="{{ route('products.index', array_merge(request()->query(), ['tab' => 'all', 'page' => 1])) }}"
+        class="products_tab {{ request('tab') === null || request('tab') === 'all' ? 'is-active' : '' }}">
         おすすめ
     </a>
-    <a href="{{ route('products.index', ['tab' => 'mylist']) }}"
+    <a href="{{ route('products.index', array_merge(request()->query(), ['tab' => 'mylist', 'page' => 1])) }}"
         class="products_tab {{ request('tab') === 'mylist' ? 'is-active' : '' }}">
         マイリスト
     </a>

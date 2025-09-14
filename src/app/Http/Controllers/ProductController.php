@@ -14,7 +14,9 @@ class ProductController extends Controller
     // 商品一覧（おすすめ / マイリスト + キーワード検索）
     public function index(Request $request)
     {
-        $tab   = $request->string('tab')->toString();
+        $tab   = $request->query('tab', 'all');
+        $filters = $request->only(['keyword', 'category_id', 'condition', 'price_min', 'price_max', 'sale_status']);
+
         $query = Product::query()
         ->with('categories')
         ->whereIn('sale_status', [Product::SALE_STATUS_PUBLIC, Product::SALE_STATUS_SOLD]);
@@ -55,10 +57,11 @@ class ProductController extends Controller
         });
     });
 }
+        $query->filter($filters);
 
         $products = $query->paginate(12)->withQueryString();
 
-        return view('products.index', compact('products'));
+        return view('products.index', compact('products', 'tab', 'filters'));
     }
     // 商品詳細
     public function show(Request $request, Product $product)
