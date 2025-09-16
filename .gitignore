@@ -3,19 +3,31 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
-# Laravel 4 specific
+/src/node_modules/
+/src/vendor/
+
 bootstrap/compiled.php
 app/storage/
 
-# Laravel 5 & Lumen specific
 public/storage
 public/hot
 
-# Laravel 5 & Lumen specific with changed public path
 public_html/storage
 public_html/hot
 
+# storage を無視するが、app/public 配下の一部は許可
+/storage/*
+!/storage/app/
+!/storage/app/public/
+!/storage/app/public/products/
+!/storage/app/public/common/
+!/storage/app/public/profiles/
+
+src/public/storage
 storage/*.key
+/src/storage/logs/*.log
+/src/bootstrap/cache/*.php
+
 .env
 Homestead.yaml
 Homestead.json
@@ -30,3 +42,17 @@ Homestead.json
 auth.json
 
 src/README_Laravel.md
+
+.env.testing
+
+/docker/mysql/
+/docker/mysql/data/
+
+.DS_Store
+
+# env & IDE
+/.env
+/src/.env
+/src/.env.testing
+/.idea
+/.vscode
