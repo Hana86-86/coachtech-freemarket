@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ShippingAddressController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\TradeChatController;
 use App\Http\Controllers\TradeController;
 use App\Http\Requests\CommentStoreRequest;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -38,7 +39,7 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/products/{product}', [ProductController::class, 'show'])->whereNumber('product')->name('products.show');
 
 // コンビニ決済
-Route::post('/stripe/webhook',[StripeWebhookController::class, 'handle'])->name('stripe.webhook');
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
 /*
 |---------------------------------------------
@@ -59,7 +60,7 @@ Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $requ
     if ($request->user()->is_first_login) {
         return redirect()->route('profile.edit');
     }
-    return redirect()->route('products.index'); 
+    return redirect()->route('products.index');
 })->middleware(['auth', 'signed'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
@@ -76,22 +77,22 @@ Route::middleware('auth')->get('/profile/purchases', [ProfileController::class, 
 //==============================
 // 認証・メール認証が必要なルート
 //==============================
-Route::middleware(['auth','verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
     // 出品画面表示
-    Route::get('/sell',[ProductController::class,'create'])->name('products.create');
+    Route::get('/sell', [ProductController::class, 'create'])->name('products.create');
     // 出品処理
-    Route::post('/sell',[ProductController::class,'store'])->name('products.store');
+    Route::post('/sell', [ProductController::class, 'store'])->name('products.store');
 
     // 購入処理
-    Route::get('/purchase/confirm/{id}',[PurchaseController::class, 'confirm'])->name('purchase.confirm');
+    Route::get('/purchase/confirm/{id}', [PurchaseController::class, 'confirm'])->name('purchase.confirm');
     // 決済処理
     Route::post('/purchase/checkout/{id}', [PurchaseController::class, 'checkout'])->name('purchase.checkout');
     Route::get('/purchase/success/{id}', [PurchaseController::class, 'success'])->name('purchase.success');
 
     // 配送先編集
     Route::get('/purchase/address', [ShippingAddressController::class, 'edit'])->name('purchase.address.edit');
-    Route::post('/purchase/address',[ShippingAddressController::class, 'update'])->name('purchase.address.update');
+    Route::post('/purchase/address', [ShippingAddressController::class, 'update'])->name('purchase.address.update');
 
     // いいね
     Route::post('/products/{product}/favorite-toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
@@ -100,11 +101,11 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::post('/products/{product}/comments', [CommentController::class, 'store'])->name('comments.store');
 
     // マイページ（プロフィール確認 + 出品/購入一覧
-    Route::get('/profile',[ProfileController::class,'show'])->name('profile.show');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
 
     // プロフィール関連
-    Route::get('/profile/edit',[ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile',[ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile', [ProfileController::class, 'store'])->name('profile.store');
 
     // 出品者用
@@ -115,10 +116,16 @@ Route::middleware(['auth','verified'])->group(function () {
     // 取引中一覧
     Route::get('/trades', [TradeController::class, 'index'])->name('trades.index');
     // 取引中詳細
-    Route::get('/trades/{purchase}',[TradeController::class, 'show'])->whereNumber('purchase')->name('trades.show');
+    Route::get('/trades/{purchase}', [TradeController::class, 'show'])->whereNumber('purchase')->name('trades.show');
     // 取引チャット
     Route::get('/trades/{purchase}/chat', [TradeController::class, 'chat'])->name('trades.chat');
+    // 取引チャット画面
+    Route::get('/trades/{purchase}/chat', [TradeChatController::class, 'show'])
+        ->name('trades.chat.show')
+        ->middleware('auth');
 
-
-
+    // メッセージ送信
+    Route::post('/trades/{purchase}/messages', [TradeChatController::class, 'store'])
+        ->name('trades.messages.store')
+        ->middleware('auth');
 });

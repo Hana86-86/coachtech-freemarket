@@ -1654,3 +1654,168 @@ body {
   color: #fff;
   border-color: #ef4444;
 }
+
+/* ===========================
+    取引チャット画面
+   =========================== */
+
+.trade-chat {
+  display: flex;              /* 左右のカラムにする */
+  gap: 24px;                  /* カラムの間隔 */
+  max-width: 1200px;          /* 画面の最大幅（適宜調整） */
+  margin: 32px auto;          /* 中央寄せ */
+}
+
+/* 左側サイドバー */
+.trade-chat__sidebar {
+  width: 260px;
+  border-right: 1px solid #ddd;
+}
+
+.trade-chat__sidebar-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.trade-chat__thread-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.trade-chat__thread {
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.trade-chat__thread--active {
+  background-color: #f5f5f5; /* 選択中の取引 */
+}
+
+.trade-chat__thread + .trade-chat__thread {
+  margin-top: 8px;
+}
+
+/* 右側メイン */
+.trade-chat__main {
+  flex: 1; /* 残りの幅を全部使う */
+}
+
+/* ヘッダー */
+.trade-chat__header {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.trade-chat__product-name,
+.trade-chat__product-price {
+  font-weight: bold;
+}
+
+.trade-chat__role-label {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* メッセージ一覧 */
+.trade-chat__messages {
+  min-height: 240px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.trade-chat__message {
+  max-width: 60%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.trade-chat__message--me {
+  margin-left: auto;            /* 右寄せ */
+  background-color: #ffe7e7;    /* 自分側の色（赤寄り） */
+}
+
+.trade-chat__message--partner {
+  margin-right: auto;           /* 左寄せ */
+  background-color: #f2f2f2;    /* 相手側の色（グレー） */
+}
+
+.trade-chat__message-meta {
+  font-size: 10px;
+  color: #666;
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* システムメッセージ */
+.trade-chat__system-message {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin: 16px 0;
+}
+
+/* 入力フォーム */
+.trade-chat__input-area {
+  padding-top: 16px;
+}
+
+.trade-chat__textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.trade-chat__form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.trade-chat__send-button,
+.trade-chat__complete-button,
+.trade-chat__rating-submit {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.trade-chat__send-button {
+  background-color: #ff6f61;
+  color: #fff;
+}
+
+.trade-chat__complete-button {
+  background-color: #f2f2f2;
+}
+
+.trade-chat__rating-submit {
+  background-color: #ff6f61;
+  color: #fff;
+}
+
+/* 評価モーダル（とりあえず常に表示・あとで JS で制御予定） */
+.trade-chat__rating-modal {
+  margin-top: 24px;
+}
+
+.trade-chat__rating-modal-inner {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fffdf5;
+}
+
+.trade-chat__rating-stars {
+  font-size: 20px;
+  margin: 8px 0 16px;
+}

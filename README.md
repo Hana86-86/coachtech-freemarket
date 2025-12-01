@@ -80,22 +80,30 @@ Seeder によって以下の 3 ユーザーが作成されます。
 メール認証済み状態（email_verified_at あり） のため、そのままログインできます。
 
 ① 出品者 A
-seller1@example.com
-password
-商品 C001〜C005 を出品
+・メール seller1@example.com
+・パスワード  password
+・商品 C001〜C005 を出品
 
 ② 出品者 B
-seller2@example.com
-password
-商品 C006〜C010 を出品
+・メール seller2@example.com
+・パスワード  password
+・商品 C006〜C010 を出品
 
 ③ 購入者ユーザー
-buyer@example.com
-password
-商品は出品せず、購入専用ユーザー
+・メール buyer@example.com
+・パスワード password
+・商品は出品せず、購入専用ユーザー
+・購入した商品
+• product_id：1
+• 商品名：Seeder 実行時に自動生成された商品の 1 件目
+• 購入金額（amount）：Seeder の内容に基づき設定（例：8,000 円）
+• ステータス：trading（取引中）
+• 支払い方法：card（ダミー）
+＊php artisan migrate:fresh --seed を実行すると、
+products の ID 付与順が変わるため、product_id=1 が指す商品も毎回変わる点に注意してください。
 
 - ログイン確認用
   • ログイン画面 → seller1@example.com / password
   • マイページ → 出品商品一覧で C001〜C005 が確認できます。
-- 商品画像は storage/app/public/products/ へコピー済みで、
+- 商品画像は storage/app/public/products/ へ、コピー済みで、
   php artisan storage:link により公開されます。
