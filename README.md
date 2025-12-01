@@ -54,8 +54,11 @@ php artisan key:generate
 php artisan storage:link
 
 ７） マイグレーションとシーディング
+・ダミーデータについて（Seeder）
+本アプリでは検証用にユーザー・商品・カテゴリーのダミーデータを Seeder によって自動生成しています。
+Docker 起動後、以下のコマンドでデータベースへ投入されます
 
-php artisan migrate --seed
+php artisan migrate:fresh --seed
 
 動作確認 URL
 • Web: http://localhost:8081
@@ -66,3 +69,33 @@ php artisan migrate --seed
 ![ER図](er-diagram.png)
 
 ---
+
+・ダミーデータについて（Seeder）
+本アプリでは検証用にユーザー・商品・カテゴリーのダミーデータを Seeder によって自動生成しています。
+Doker 起動後、以下のコマンドでデータベースへ投入されます
+
+・ 生成されるテストユーザー
+
+Seeder によって以下の 3 ユーザーが作成されます。
+メール認証済み状態（email_verified_at あり） のため、そのままログインできます。
+
+① 出品者 A
+seller1@example.com
+password
+商品 C001〜C005 を出品
+
+② 出品者 B
+seller2@example.com
+password
+商品 C006〜C010 を出品
+
+③ 購入者ユーザー
+buyer@example.com
+password
+商品は出品せず、購入専用ユーザー
+
+- ログイン確認用
+  • ログイン画面 → seller1@example.com / password
+  • マイページ → 出品商品一覧で C001〜C005 が確認できます。
+- 商品画像は storage/app/public/products/ へコピー済みで、
+  php artisan storage:link により公開されます。

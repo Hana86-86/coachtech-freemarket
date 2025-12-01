@@ -1,17 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
-use Laravel\Fortify\Fortify;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use Illuminate\Http\Request;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ShippingAddressController;
-use App\Http\Controllers\CommentController;
-use App\Http\Requests\CommentStoreRequest;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\TradeController;
+use App\Http\Requests\CommentStoreRequest;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Fortify;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,6 +111,13 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+
+    // 取引中一覧
+    Route::get('/trades', [TradeController::class, 'index'])->name('trades.index');
+    // 取引中詳細
+    Route::get('/trades/{purchase}',[TradeController::class, 'show'])->whereNumber('purchase')->name('trades.show');
+    // 取引チャット
+    Route::get('/trades/{purchase}/chat', [TradeController::class, 'chat'])->name('trades.chat');
 
 
 

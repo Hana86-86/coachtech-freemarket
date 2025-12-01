@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Category;
 use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
@@ -29,6 +29,7 @@ class CategorySeeder extends Seeder
             'アクセサリー',
             'おもちゃ',
             'ベビー・キッズ',
+            '日用品',
         ];
         foreach ($names as $name) {
             Category::firstOrCreate(['name' => $name]);
