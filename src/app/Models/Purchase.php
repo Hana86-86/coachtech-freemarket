@@ -38,4 +38,11 @@ class Purchase extends Model
         // 第2引数 'trade_id' は、外部キーのカラム名
         return $this->hasMany(TradeMessage::class, 'trade_id');
     }
+    public function scopeTradingForBuyer($query, int $userId)
+    {
+        // buyer_idが指定ユーザーかつstatusがtradingのものだけに絞る
+        return $query
+            ->where('buyer_id', $userId)
+            ->where('status', self::STATUS_TRADING);
+    }
 }
