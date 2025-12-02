@@ -7,35 +7,73 @@ use App\Models\Product;
 use App\Models\Profile;
 use App\Models\Purchase;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
+
 
 class ProfileController extends Controller
 {
     public function show(Request $request)
     {
-        $user = $request->user()->load('profile');
-
+        $user = $request->user();   // ログイン中ユーザー
         $currentTab = $request->query('tab', 'selling');
 
+        // 出品した商品
         $myProducts = $user->products()
-            ->latest()
-            ->get();
-
-        $tradingPurchases = $user->purchases()
-            ->with('product')
-            ->where('status', Purchase::STATUS_TRADING)
             ->latest('created_at')
             ->get();
 
-        $completedPurchases = $user->purchases()
+        // ★ 取引中の購入情報（自分が買った or 自分が売っている商品を両方取得）
+        $tradingPurchases = Purchase::query()
+            ->where('status', Purchase::STATUS_TRADING)
+            ->where(function ($query) use ($user) {
+                $query->where('buyer_id', $user->id)
+                    ->orWhereHas('product', function ($sq) use ($user) {
+                        $sq->where('user_id', $user->id);
+                    });
+            })
             ->with('product')
-            ->where('status', Purchase::STATUS_COMPLETED)
             ->latest('paid_at')
             ->get();
 
+        // ★ 各取引ごとに未読件数を計算してプロパティに入れる
+        foreach ($tradingPurchases as $purchase) {
+            
+            $isBuyer = ($purchase->buyer_id === $user->id);
+
+            // 相手側のユーザーID（自分から見て「相手」が誰か）
+            $otherUserId = $isBuyer
+                ? $purchase->product->user_id   // 自分が買い手 → 相手は出品者
+                : $purchase->buyer_id;          // 自分が出品者 → 相手は買い手
+
+            // 自分側の「最後に読んだ時刻」
+            $lastReadAt = $isBuyer
+                ? $purchase->buyer_last_read_at
+                : $purchase->seller_last_read_at;
+
+            // ★ trade_messages テーブルから未読をカウント
+            $unreadQuery = \App\Models\TradeMessage::query()
+                ->where('trade_id', $purchase->id)     // この取引のメッセージだけ
+                ->where('user_id', $otherUserId);      // 相手が送ったものだけ
+
+            // 最後に読んだ時間があれば「それ以降」を未読とみなす
+            if ($lastReadAt) {
+                $unreadQuery->where('created_at', '>', $lastReadAt);
+            }
+
+            $purchase->unread_count = $unreadQuery->count();
+        }
+
+        $tradingUnreadTotal = $tradingPurchases->sum('unread_count');
+
+        $completedPurchases = $user->purchases()
+            ->where('status', Purchase::STATUS_COMPLETED)
+            ->with('product')
+            ->latest('paid_at')
+            ->get();
+
+        // 平均評価（購入側）
         $buyerRatingAvg = $user->purchases()
             ->whereNotNull('buyer_rating')
             ->avg('buyer_rating');
@@ -44,6 +82,7 @@ class ProfileController extends Controller
             $buyerRatingAvg = round($buyerRatingAvg, 1);
         }
 
+        // 平均評価（出品側）
         $sellerRatingAvg = Purchase::query()
             ->whereHas('product', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
@@ -63,6 +102,7 @@ class ProfileController extends Controller
             'purchases'         => $completedPurchases,
             'buyerRatingAvg'    => $buyerRatingAvg,
             'sellerRatingAvg'   => $sellerRatingAvg,
+            'tradingUnreadTotal' => $tradingUnreadTotal,
         ]);
     }
 

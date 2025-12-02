@@ -19,16 +19,13 @@ class TradeMessage extends Model
         'type',
     ];
 
-    /** このメッセージが属する取引 */
-    public function trade()
-    {
-        // 第2引数 'trade_id' は外部キー
-        return $this->belongsTo(Purchase::class, 'trade_id');
-    }
-
     /** このメッセージを書いたユーザー */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+    public function purchase()
+{
+    return $this->belongsTo(Purchase::class, 'trade_id');
+}
 }

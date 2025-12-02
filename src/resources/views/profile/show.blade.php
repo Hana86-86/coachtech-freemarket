@@ -9,7 +9,7 @@
     <header class="mp-head">
         <img src="{{ $user->avatarUrl }}" alt="{{ $user->name }}" class="mp-avatar">
         <h1 class="mp-user-name">
-            
+
             @if(!is_null($buyerRatingAvg))
             <span class="mp-rating">購入：★{{ $buyerRatingAvg }} / 5</span>
             @endif
@@ -52,11 +52,22 @@
             class="mypage-tab {{ $currentTab === 'bought' ? 'is-active' : '' }}">
             購入した商品
         </a>
-        <a href="{{ route('profile.show', ['tab' => 'trading']) }}"
-            class="mypage-tab {{ $currentTab === 'trading' ? 'is-active' : '' }}">
-            取引中の商品
-        </a>
-    </nav>
+        {{-- ★ 取引中タブ：未読があればクラス has-unread を付ける --}}
+    @php
+        $hasUnread = !empty($tradingUnreadTotal) && $tradingUnreadTotal > 0;
+    @endphp
+    <a href="{{ route('profile.show', ['tab' => 'trading']) }}"
+        class="mypage-tab mypage-tab--trading {{ $currentTab === 'trading' ? 'is-active' : '' }} {{ $hasUnread ? 'has-unread' : '' }}">
+        取引中の商品
+
+        {{-- ★ 未読が1件以上あるときだけ赤丸＋件数を表示 --}}
+        @if ($hasUnread)
+            <span class="mypage-tab__badge">
+                {{ $tradingUnreadTotal }}
+            </span>
+        @endif
+    </a>
+</nav>
     {{-- タブ下の区切り線 --}}
     <hr class="mp-divider">
 
@@ -102,24 +113,34 @@
 
         @elseif ($currentTab === 'trading')
         {{-- 取引中の商品タブ --}}
-        @forelse ($tradingPurchases as $purchase)
-        @php $product = $purchase->product; @endphp
+        <div class="product-grid">
+            @forelse ($tradingPurchases as $purchase)
+            @php
+            $product = $purchase->product;
+            @endphp
 
-        <article class="gp-cards">
-            {{-- 取引チャット画面へのリンクにしてもOK（後で Step3 で活用） --}}
-            <a href="{{ route('trades.chat.show', $purchase) }}" class="gp-thumb">
-                <img src="{{ $product->image_url }}" alt="{{ $product->title }}" class="card_thumb">
-            </a>
+            <div class="product-card">
+                {{-- ★ バッジ（未読件数） --}}
+                @if (!empty($purchase->unread_count) && $purchase->unread_count > 0)
+                <div class="product-card__badge">
+                    {{ $purchase->unread_count }}
+                </div>
+                @endif
 
-            <div class="card_body">
-                <h3 class="card_title">{{ $product->title }}</h3>
-                <p class="card_price">¥{{ number_format($purchase->amount) }}</p>
-                <p class="badge badge--status">取引中</p>
+                <a href="{{ route('trades.chat.show', $purchase) }}" class="product-card__link">
+                    <div class="product-card__image">
+                        <img src="{{ $product->image_url }}" alt="{{ $product->title }}">
+                    </div>
+                    <div class="product-card__body">
+                        <div class="product-card__title">{{ $product->title }}</div>
+                        <div class="product-card__price">¥{{ number_format($purchase->amount) }}</div>
+                    </div>
+                </a>
             </div>
-        </article>
-        @empty
-        <p class="muted">取引中の商品はありません。</p>
-        @endforelse
+            @empty
+            <p>取引中の商品はありません。</p>
+            @endforelse
+        </div>
         @endif
     </div>
     @endsection

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Purchase;
 use App\Models\TradeMessage;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class TradeChatController extends Controller
@@ -12,18 +13,29 @@ class TradeChatController extends Controller
     public function show(Purchase $purchase)
     {
         $user = auth()->user();
-        $product = $purchase->product;
 
+        // ★ 自分が買い手 or 売り手かで、更新するカラムを切り替える
+        if ($user->id === $purchase->buyer_id) {
+            $purchase->buyer_last_read_at = now();   // 今読んだ
+        } else {
+            $purchase->seller_last_read_at = now();
+        }
+        $purchase->save();
+
+        // 左カラム「その他の取引」
         $otherTrades = $user->purchases()
             ->where('id', '!=', $purchase->id)
             ->with('product')
             ->latest('created_at')
             ->get();
 
+        // メッセージ一覧
         $messages = $purchase->messages()
             ->with('user')
             ->orderBy('created_at')
             ->get();
+
+        $product = $purchase->product;
 
         return view('trades.chat', compact('purchase', 'product', 'messages', 'otherTrades'));
     }
@@ -43,7 +55,7 @@ class TradeChatController extends Controller
         ]);
 
         return redirect()
-            ->route('trades.chat', $purchase)
+            ->route('trades.chat.show', $purchase)
             ->with('success', 'メッセージを送信しました。');
     }
     /** 評価保存 */
@@ -66,6 +78,41 @@ class TradeChatController extends Controller
         return redirect()
             ->route('trades.chat.show', $purchase)
             ->with('success', '評価を送信しました。');
+    }
+    /** メッセージの所有者かどうかをチェックする共通メソッド */
+    private function authorizeMessageOwner(TradeMessage $message): void
+    {
+        if (auth()->id() !== $message->user_id) {
+            abort(403, 'このメッセージを編集・削除する権限がありません。');
+        }
+    }
+    /** チャットメッセージを編集（更新）する */
+    public function update(Request $request, TradeMessage $message)
+    {
+        $this->authorizeMessageOwner($message);
+        $validated = $request->validate([
+            'body' => ['required', 'string', 'max:1000'],
+        ]);
+        $message->update([
+            'body' => $validated['body'],
+        ]);
+
+        $purchase = $message->purchase;
+
+        return redirect()
+            ->route('trades.chat.show', $purchase)
+            ->with('success', 'メッセージを更新しました。');
+    }
+    /** チャットメッセージを削除する */
+    public function destroy(TradeMessage $message)
+    {
+        $this->authorizeMessageOwner($message);
+        $purchase = $message->purchase;
+        $message->delete();
+
+        return redirect()
+            ->route('trades.chat.show', $purchase)
+            ->with('success', 'メッセージを削除しました。');
     }
     // 評価の保存
     public function rate(Request $request, Purchase $purchase)

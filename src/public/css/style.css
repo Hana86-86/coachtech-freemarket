@@ -1819,3 +1819,57 @@ body {
   font-size: 20px;
   margin: 8px 0 16px;
 }
+/* 商品カード全体 */
+.product-card {
+    position: relative;
+}
+/* 未読バッジ */
+.product-card__badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    min-width: 18px;
+    padding: 2px 6px;
+    font-size: 11px;
+    line-height: 1.2;
+    border-radius: 999px;
+    text-align: center;
+    background-color: #e53935;
+    color: #fff;
+    z-index: 10;
+}
+/* 取引中タブ用：右側にバッジを付けるため relative */
+.mypage-tab--trading {
+  position: relative;
+  padding-right: 24px; /* バッジぶんの右余白 */
+}
+
+/* タブ横の赤丸バッジ（数字入り） */
+.mypage-tab__badge {
+  position: absolute;
+  top: 0;
+  right: 4px;
+
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+
+  border-radius: 999px;
+  background-color: #e53935;
+  color: #fff;
+}
+
+/* ★ 未読ありのとき、タブ文字を赤くする */
+.products_tabs .mypage-tab.has-unread {
+  color: #e53935;
+  font-weight: 700;
+}
+
+/* アクティブ時も赤をキープ（必要なら） */
+.products_tabs .mypage-tab.has-unread.is-active {
+  color: #e53935;
+}

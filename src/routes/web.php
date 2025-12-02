@@ -136,4 +136,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/trades/{purchase}/rating', [TradeChatController::class, 'rate'])
         ->name('trades.rating')
         ->middleware('auth');
+    // メッセージ編集・削除
+    Route::patch('/trades/messages/{message}', [TradeChatController::class, 'update'])
+        ->name('trades.messages.update');
+    Route::delete('/trades/messages/{message}', [TradeChatController::class, 'destroy'])
+        ->name('trades.messages.destroy');
 });

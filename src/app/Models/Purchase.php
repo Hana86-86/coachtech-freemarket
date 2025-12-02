@@ -52,7 +52,6 @@ class Purchase extends Model
     }
     public function messages()
     {
-        // 第2引数 'trade_id' は、外部キーのカラム名
         return $this->hasMany(TradeMessage::class, 'trade_id');
     }
     public function scopeTradingForBuyer($query, int $userId)
