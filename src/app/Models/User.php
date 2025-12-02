@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Profile;
+use App\Models\Purchase;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Models;
-use App\Models\Purchase;
-use App\Models\Profile;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -51,7 +51,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function purchases()
     {
-        return $this->hasMany(\App\Models\Purchase::class, 'buyer_id');
+        return $this->hasMany(Purchase::class, 'buyer_id');
     }
 
     public function profile()

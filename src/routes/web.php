@@ -128,4 +128,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/trades/{purchase}/messages', [TradeChatController::class, 'store'])
         ->name('trades.messages.store')
         ->middleware('auth');
+
+    // 評価送信用ルート
+    Route::post('/trades/{purchase}/rating', [TradeChatController::class, 'storeRating'])
+        ->name('trades.rating.store');
+
+    Route::post('/trades/{purchase}/rating', [TradeChatController::class, 'rate'])
+        ->name('trades.rating')
+        ->middleware('auth');
 });

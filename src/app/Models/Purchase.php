@@ -10,7 +10,24 @@ class Purchase extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['buyer_id', 'product_id', 'amount', 'payment_method', 'status', 'paid_at', 'payment_intent_id', 'session_id'];
+    protected $fillable = [
+        'buyer_id',
+        'product_id',
+        'amount',
+        'payment_method',
+        'status',
+        'payment_intent_id',
+        'session_id',
+        'paid_at',
+        'buyer_rating',
+        'seller_rating',
+    ];
+    // 型キャスト（あれば）
+    protected $casts = [
+        'paid_at'       => 'datetime',
+        'buyer_rating'  => 'integer',
+        'seller_rating' => 'integer',
+    ];
 
     public const STATUS_AWAITING   = 'awaiting_payment';
     public const STATUS_PAID       = 'paid';

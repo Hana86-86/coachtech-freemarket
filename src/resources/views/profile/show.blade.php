@@ -8,8 +8,36 @@
     {{-- ユーザー情報 --}}
     <header class="mp-head">
         <img src="{{ $user->avatarUrl }}" alt="{{ $user->name }}" class="mp-avatar">
+        <h1 class="mp-user-name">
+            
+            @if(!is_null($buyerRatingAvg))
+            <span class="mp-rating">購入：★{{ $buyerRatingAvg }} / 5</span>
+            @endif
+            @if(!is_null($sellerRatingAvg))
+            <span class="mp-rating">出品：★{{ $sellerRatingAvg }} / 5</span>
+            @endif
+        </h1>
         <div class="mp-user">
             <h1 class="mp-user-name">{{ $user->name }}</h1>
+            <div class="mp-user-rating">
+                @if (is_null($buyerRatingAvg))
+                <span class="mp-user-rating__label">まだ評価はありません</span>
+                @else
+                @php
+                $starScore = (int) round($buyerRatingAvg);
+                @endphp
+                <span class="map-user-rating__stars">
+                    @for ($i = 1; $i <= 5; $i++)
+                        <span class="mp-user-rating__star">
+                        {{ $i <= $starScore ? '★' : '☆'}}
+                </span>
+                @endfor
+                </span>
+                <span class="mp-user-rating__value">
+                    ({{ $buyerRatingAvg }} / 5)
+                </span>
+                @endif
+            </div>
             <a href="{{ route('profile.edit') }}" class="btn btn--ghost btn--sm profile-edit">プロフィールを編集</a>
         </div>
     </header>

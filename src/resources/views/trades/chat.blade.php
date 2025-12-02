@@ -5,26 +5,27 @@
 
 <div class="trade-chat">
 
-    {{-- ===== 左側：サイドバー（他の取引一覧など） ===== --}}
+    {{-- 左カラム：その他の取引一覧 --}}
     <aside class="trade-chat__sidebar">
-        <div class="trade-chat__sidebar-header">
-            <h2 class="trade-chat__sidebar-title">その他の取引</h2> {{-- 左上の「その他の取引」エリア --}}
-        </div>
+        <h2 class="trade-chat__sidebar-title">その他の取引</h2>
 
         <ul class="trade-chat__thread-list">
-            {{-- ★ここは後で「他の取引リスト」を動的に表示する場所 --}}
-            <li class="trade-chat__thread trade-chat__thread--active">
-                <div class="trade-chat__thread-user">ユーザーAさん</div>
-                <div class="trade-chat__thread-product">商品名：腕時計</div>
+            @forelse ($otherTrades as $other)
+            @php $p = $other->product; @endphp
+
+            <li class="trade-chat__thread {{ $other->id === $purchase->id ? 'trade-chat__thread--active' : '' }}">
+                <a href="{{ route('trades.chat.show', $other) }}">
+                    <div class="trade-chat__thread-user">
+                        {{ $p->title }}
+                    </div>
+                    <div class="trade-chat__thread-product">
+                        商品名：{{ $p->title }}
+                    </div>
+                </a>
             </li>
-            <li class="trade-chat__thread">
-                <div class="trade-chat__thread-user">ユーザーBさん</div>
-                <div class="trade-chat__thread-product">商品名：ノートPC</div>
-            </li>
-            <li class="trade-chat__thread">
-                <div class="trade-chat__thread-user">ユーザーCさん</div>
-                <div class="trade-chat__thread-product">商品名：マイク</div>
-            </li>
+            @empty
+            <li class="trade-chat__thread-empty">他の取引はありません。</li>
+            @endforelse
         </ul>
     </aside>
 
@@ -40,9 +41,8 @@
             </div>
 
             <div class="trade-chat__product">
-                {{-- ★ 後で「商品名・価格」を差し替える --}}
-                <div class="trade-chat__product-name">商品名：マイク</div>
-                <div class="trade-chat__product-price">商品価格：¥8,000</div>
+                <div class="trade-chat__product-name">商品名：{{ $product->title}}</div>
+                <div class="trade-chat__product-price">商品価格：¥{{ number_format($purchase->amount) }}</div>
             </div>
 
             {{-- 購入者・出品者向けラベル（Figma の上部タグのイメージ） --}}
@@ -112,24 +112,77 @@
             </form>
         </section>
 
-        {{-- モーダル：評価入力（Figma の星評価ダイアログ）※まだ JS なし・静的 --}}
-        <div class="trade-chat__rating-modal">
-            <div class="trade-chat__rating-modal-inner">
-                <p class="trade-chat__rating-title">取引が完了しました。</p>
-                <p class="trade-chat__rating-sub">
-                    この取引を評価してください。
-                </p>
+        {{-- 評価エリア --}}
+        @php
+        $isBuyer = auth()->id() === $purchase->buyer_id;
+        $isSeller = auth()->id() === $purchase->product->user_id;
+        @endphp
 
-                <div class="trade-chat__rating-stars">
-                    ★★★★☆ {{-- ★ ここはあとでクリックで変わるようにする想定 --}}
-                </div>
+        @if($isBuyer || $isSeller)
+        <section class="trade-chat__rating">
+            <p>取引が完了しました。</p>
+            <p class="muted">
+                @if($isBuyer)
+                この取引で <strong>出品者 {{ optional($purchase->product->user)->name ?? '（出品者不明）' }}</strong> を評価してください。
+                @else
+                この取引で <strong>購入者 {{ optional($purchase->buyer)->name ?? '（購入者未設定）' }}</strong> を評価してください
+                @endif
+            </p>
+            <form action="{{ route('trades.rating', $purchase) }}" method="post">
+                @csrf
+                <select name="rating">
+                    <option value="">評価を選択してください</option>
+                    @for($i = 5; $i >= 1; $i--)
+                    <option value="{{ $i }}">{{ $i }}（★{{ str_repeat('★', $i) }}）</option>
+                    @endfor
+                </select>
+                <button type="submit" class="btn btn--primary">評価を送信する</button>
+            </form>
+        </section>
+        @endif
 
-                <button class="trade-chat__rating-submit">
-                    評価を送信する
-                </button>
+        {{-- まだ評価していない時だけフォームを表示 --}}
+        @if (is_null($purchase->buyer_rating))
+        <form method="post" action="{{ route('trades.rating.store', $purchase) }}" class="trade-rating-form">
+            @csrf
+
+            <div class="trade-rating-form__stars">
+                {{-- ★ 1〜5 をラジオボタンで選択 --}}
+                @for ($i = 1; $i <= 5; $i++)
+                    <label class="trade-rating-form__star">
+                    <input
+                        type="radio"
+                        name="rating"
+                        value="{{ $i }}"
+                        class="trade-rating-form__input"
+                        {{-- old() でバリデーションエラー後も選択を維持。初期値は 5 にしておく --}}
+                        @checked(old('rating', 5)==$i)>
+                    ★
+                    </label>
+                    @endfor
             </div>
-        </div>
 
+            {{-- バリデーションエラー表示 --}}
+            @error('rating')
+            <p class="form-error">{{ $message }}</p>
+            @enderror
+
+            <button type="submit" class="btn btn--primary rating-submit">
+                評価を送信する
+            </button>
+        </form>
+        @else
+        {{-- すでに評価済みの場合の表示 --}}
+        <p class="mt-2">
+            あなたの評価：
+            <span class="rating-value">
+                {{ str_repeat('★', $purchase->buyer_rating) }}
+                {{ str_repeat('☆', 5 - $purchase->buyer_rating) }}
+            </span>
+            （{{ $purchase->buyer_rating }} / 5）
+        </p>
+        @endif
+        </section>
     </main>
 </div>
 

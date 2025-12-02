@@ -16,7 +16,7 @@
         {{-- 商品画像（ダミー） --}}
         <div class="mb-3">
             <img
-                src="{{ asset('storage/' . $purchase->product->image_path) }}"
+                src="{{ $purchase->product->image_url }}"
                 alt="{{ $purchase->product->title }}"
                 class="w-full object-cover rounded">
         </div>

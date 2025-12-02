@@ -16,38 +16,53 @@ class ProfileController extends Controller
 {
     public function show(Request $request)
     {
-        // ① ログインユーザー + プロフィールを取得
         $user = $request->user()->load('profile');
 
-        // ② どのタブを開くか（?tab=... が無ければ 'selling' をデフォルトに）
         $currentTab = $request->query('tab', 'selling');
 
-        // ③ 出品した商品（自分が出品者）
         $myProducts = $user->products()
             ->latest()
             ->get();
 
-        // ④ 取引中の購入（status = trading）
         $tradingPurchases = $user->purchases()
-            ->with('product')                  // 商品情報を一緒に取得
+            ->with('product')
             ->where('status', Purchase::STATUS_TRADING)
             ->latest('created_at')
             ->get();
 
-        // ⑤ 購入が完了した商品（status = completed）
         $completedPurchases = $user->purchases()
             ->with('product')
             ->where('status', Purchase::STATUS_COMPLETED)
             ->latest('paid_at')
             ->get();
 
-        // ⑥ ビューに渡す
+        $buyerRatingAvg = $user->purchases()
+            ->whereNotNull('buyer_rating')
+            ->avg('buyer_rating');
+
+        if (!is_null($buyerRatingAvg)) {
+            $buyerRatingAvg = round($buyerRatingAvg, 1);
+        }
+
+        $sellerRatingAvg = Purchase::query()
+            ->whereHas('product', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->whereNotNull('seller_rating')
+            ->avg('seller_rating');
+
+        if (!is_null($sellerRatingAvg)) {
+            $sellerRatingAvg = round($sellerRatingAvg, 1);
+        }
+
         return view('profile.show', [
             'user'              => $user,
-            'currentTab'        => $currentTab,        // ★ どのタブか
-            'myProducts'        => $myProducts,        // 出品した商品
-            'tradingPurchases'  => $tradingPurchases,  // 取引中
-            'purchases'         => $completedPurchases, // 完了した購入
+            'currentTab'        => $currentTab,
+            'myProducts'        => $myProducts,
+            'tradingPurchases'  => $tradingPurchases,
+            'purchases'         => $completedPurchases,
+            'buyerRatingAvg'    => $buyerRatingAvg,
+            'sellerRatingAvg'   => $sellerRatingAvg,
         ]);
     }
 
