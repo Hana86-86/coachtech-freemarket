@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class TradeController extends Controller
 {
     /**
-     * 取引中の一覧画面（FN001）
+     * 取引中の一覧画面
      */
     public function index()
     {
@@ -20,7 +20,6 @@ class TradeController extends Controller
             ->orWhereHas('product', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
-            // ここでは「status が completed 以外」を取引中とみなす例
             ->where('status', '!=', 'completed')
             ->orderByDesc('created_at')
             ->get();
@@ -32,7 +31,7 @@ class TradeController extends Controller
     }
 
     /**
-     * 取引チャット画面（FN002）
+     * 取引チャット画面
      */
     public function show(Purchase $purchase)
     {

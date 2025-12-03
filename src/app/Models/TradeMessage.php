@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Purchase;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class TradeMessage extends Model
 {
@@ -17,7 +18,16 @@ class TradeMessage extends Model
         'body',
         'is_system',
         'type',
+        'image_path',
     ];
+    
+    public function getImageUrlAttribute()
+    {
+        if (!$this->image_path) {
+            return null;
+        }
+        return Storage::url($this->image_path);
+    }
 
     /** このメッセージを書いたユーザー */
     public function user()

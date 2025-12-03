@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PurchaseRequest;
+use App\Models\Product;
+use App\Models\Purchase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Product;
-use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
-use App\Models\Purchase;
-use App\Http\Requests\PurchaseRequest;
 use Stripe\PaymentIntent as StripePaymentIntent;
+use Stripe\Stripe;
 
 class PurchaseController extends Controller
 {
@@ -77,7 +77,6 @@ class PurchaseController extends Controller
 
         $session = StripeSession::create($params);
 
-        // コンビニはここで予約（SOLD）& 購入レコードPENDINGを作る
         if ($method === 'konbini') {
             \DB::transaction(function () use ($product, $session) {
                 if ($product->sale_status !== Product::SALE_STATUS_SOLD) {

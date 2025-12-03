@@ -1569,7 +1569,6 @@ body {
   overflow: hidden;
 }
 
-/* 実ファイル入力は見せない */
 .image-drop__input {
   position: absolute;
   inset: 0;
@@ -1579,13 +1578,12 @@ body {
   cursor: pointer;
 }
 
-/* 真ん中のボタン風ラベル（Figmaの「ファイルを選択」） */
 .image-drop__hint {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  pointer-events: none;          /* クリックは input に通す */
+  pointer-events: none;
   color: #c33;
   font-weight: 600;
 }
@@ -1622,7 +1620,7 @@ body {
 .check input {
   accent-color: #e35b5b;
 }
-/* input を“視覚的に”隠す（クリックは label が拾う） */
+
 .chip_input {
   position: absolute;
   opacity: 0;
@@ -1631,7 +1629,6 @@ body {
   outline: none;
 }
 
-/* pill の見た目 */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -1660,10 +1657,10 @@ body {
    =========================== */
 
 .trade-chat {
-  display: flex;              /* 左右のカラムにする */
-  gap: 24px;                  /* カラムの間隔 */
-  max-width: 1200px;          /* 画面の最大幅（適宜調整） */
-  margin: 32px auto;          /* 中央寄せ */
+  display: flex;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 32px auto;
 }
 
 /* 左側サイドバー */
@@ -1736,13 +1733,13 @@ body {
 }
 
 .trade-chat__message--me {
-  margin-left: auto;            /* 右寄せ */
-  background-color: #ffe7e7;    /* 自分側の色（赤寄り） */
+  margin-left: auto;
+  background-color: #ffe7e7;
 }
 
 .trade-chat__message--partner {
-  margin-right: auto;           /* 左寄せ */
-  background-color: #f2f2f2;    /* 相手側の色（グレー） */
+  margin-right: auto;
+  background-color: #f2f2f2;
 }
 
 .trade-chat__message-meta {
@@ -1803,11 +1800,6 @@ body {
   color: #fff;
 }
 
-/* 評価モーダル（とりあえず常に表示・あとで JS で制御予定） */
-.trade-chat__rating-modal {
-  margin-top: 24px;
-}
-
 .trade-chat__rating-modal-inner {
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -1863,13 +1855,115 @@ body {
   color: #fff;
 }
 
-/* ★ 未読ありのとき、タブ文字を赤くする */
 .products_tabs .mypage-tab.has-unread {
   color: #e53935;
   font-weight: 700;
 }
 
-/* アクティブ時も赤をキープ（必要なら） */
 .products_tabs .mypage-tab.has-unread.is-active {
   color: #e53935;
+}
+.trade-chat__product-image-img {
+    max-width: 300px;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin-bottom: 12px;
+}
+.trade-chat__message-image img {
+    max-width: 200px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+/* ================= 評価モーダル ================= */
+
+.rating-modal {
+  display: none;               
+  position: fixed;             
+  inset: 0;                    
+  justify-content: center;     
+  align-items: center;         
+  z-index: 1000;               
+}
+
+.rating-modal.is-open {
+  display: flex;               
+}
+
+.rating-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);  /* 半透明の黒 */
+}
+
+.rating-modal__content {
+  position: relative;
+  background: #fff;
+  padding: 24px 32px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-width: 480px;
+  width: 90%;
+  z-index: 1001;
+}
+
+.rating-modal__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.rating-modal__title {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.rating-modal__text {
+  margin-bottom: 16px;
+  text-align: center;
+  color: #555;
+}
+
+.rating-modal__form {
+  text-align: center;
+}
+
+.rating-modal__stars {
+  margin-bottom: 16px;
+}
+
+.rating-modal__star {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.rating-modal__input {
+  display: none;
+}
+
+.rating-modal__submit {
+  margin-top: 8px;
+}
+/* ★ のデフォルト色（未選択） */
+.rating-modal__star-icon {
+  color: #ccc;          /* グレー */
+  transition: color 0.2s;
+}
+
+.rating-modal__input:checked + .rating-modal__star-icon {
+  color: #f5b301;
+}
+
+.rating-modal__star:hover .rating-modal__star-icon {
+  color: #f5b301;
+}
+.rating-modal__star-icon.is-active {
+  color: #f5b301;
 }

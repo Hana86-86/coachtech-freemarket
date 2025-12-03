@@ -22,7 +22,6 @@ class Purchase extends Model
         'buyer_rating',
         'seller_rating',
     ];
-    // 型キャスト（あれば）
     protected $casts = [
         'paid_at'       => 'datetime',
         'buyer_rating'  => 'integer',
@@ -44,6 +43,14 @@ class Purchase extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'buyer_id');
+    }
+    public function buyer()
+    {
+        return $this->belongsTo(User::class, 'buyer_id');
+    }
+    public function seller()
+    {
+        return $this->belongsTo(User::class, 'seller_id');
     }
 
     public function review()

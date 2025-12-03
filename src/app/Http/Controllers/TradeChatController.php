@@ -2,57 +2,129 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTradeMessageRequest;
 use App\Models\Purchase;
 use App\Models\TradeMessage;
 use Carbon\Carbon;
+
 use Illuminate\Http\Request;
 
 class TradeChatController extends Controller
 {
-    /** チャット画面の表示 */
     public function show(Purchase $purchase)
-    {
-        $user = auth()->user();
+{
+    // -------------------------------
+    // ① 関連モデルをまとめてロード
+    // -------------------------------
+    // ・product.user ... 商品の出品者
+    // ・buyer          ... 購入者
+    // ・messages.user  ... メッセージを書いたユーザー
+    $purchase->load(['product.user', 'buyer', 'messages.user']);
 
-        // ★ 自分が買い手 or 売り手かで、更新するカラムを切り替える
-        if ($user->id === $purchase->buyer_id) {
-            $purchase->buyer_last_read_at = now();   // 今読んだ
+    // ログインユーザー
+    $user = auth()->user();
+
+    // 購入者（purchases.buyer_id）
+    $buyer = $purchase->buyer;
+
+    // 出品者（products.user_id のユーザー）
+    $seller = $purchase->product->user;
+
+    // 取引相手（チャット画面に表示する相手）
+    $partner = null;
+
+    // 自分の立場（buyer / seller / guest）
+    $role = 'guest';
+
+    // -------------------------------
+    // ② 自分が buyer / seller どちらか判定
+    // -------------------------------
+    if ($user) {
+        // 自分が購入者
+        if ($buyer && $buyer->id === $user->id) {
+            $partner = $seller;   // 相手は出品者
+            $role    = 'buyer';
+
+        // 自分が出品者（= 商品の user）
+        } elseif ($seller && $seller->id === $user->id) {
+            $partner = $buyer;    // 相手は購入者
+            $role    = 'seller';
+
+        // どちらでもない（本来は入ってこない想定）
         } else {
-            $purchase->seller_last_read_at = now();
+            $partner = $buyer ?? $seller;
+            $role    = 'guest';
         }
-        $purchase->save();
-
-        // 左カラム「その他の取引」
-        $otherTrades = $user->purchases()
-            ->where('id', '!=', $purchase->id)
-            ->with('product')
-            ->latest('created_at')
-            ->get();
-
-        // メッセージ一覧
-        $messages = $purchase->messages()
-            ->with('user')
-            ->orderBy('created_at')
-            ->get();
-
-        $product = $purchase->product;
-
-        return view('trades.chat', compact('purchase', 'product', 'messages', 'otherTrades'));
     }
 
+    // -------------------------------
+    // ③ 既読フラグの更新
+    // -------------------------------
+    if ($user) {
+        if ($buyer && $buyer->id === $user->id) {
+            // 自分が購入者なら buyer_last_read_at を更新
+            $purchase->buyer_last_read_at = now();
+        } elseif ($seller && $seller->id === $user->id) {
+            // 自分が出品者なら seller_last_read_at を更新
+            $purchase->seller_last_read_at = now();
+        }
+
+        $purchase->save();
+    }
+
+    // -------------------------------
+    // ④ その他の取引一覧（左カラム）
+    // -------------------------------
+    $otherTrades = $user
+        ? $user->purchases()                  // ログインユーザーの購入履歴
+            ->where('id', '!=', $purchase->id) // 今見ている取引以外
+            ->with('product')
+            ->latest('created_at')
+            ->get()
+        : collect();                           // 未ログインなら空コレクション
+
+    // -------------------------------
+    // ⑤ メッセージ一覧
+    // -------------------------------
+    $messages = $purchase->messages()
+        ->with('user')
+        ->orderBy('created_at')
+        ->get();
+
+    // 商品情報（ヘッダー表示用）
+    $product = $purchase->product;
+
+    // -------------------------------
+    // ⑥ 画面に渡す
+    // -------------------------------
+    return view('trades.chat', compact(
+        'purchase',
+        'product',
+        'messages',
+        'otherTrades',
+        'partner', // 取引相手（ヘッダーに表示）
+        'role'     // 自分の立場（購入者 / 出品者 / ゲスト）
+    ));
+}
+
     /** メッセージ送信処理 */
-    public function store(Request $request, Purchase $purchase)
+    public function store(StoreTradeMessageRequest $request, Purchase $purchase)
     {
 
-        $validated = $request->validate([
-            'body' => ['required', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
-        TradeMessage::create([
-            'trade_id' => $purchase->id,
-            'user_id'  => $request->user()->id,
-            'body'     => $validated['body'],
-        ]);
+        $message = new TradeMessage();
+        $message->trade_id = $purchase->id;
+        $message->user_id = auth()->id();
+        $message->body     = $validated['body'] ?? null;
+        $message->is_system = false;
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('trade_messages',  'public');
+            $message->image_path = $path;
+        }
+
+        $message->save();
 
         return redirect()
             ->route('trades.chat.show', $purchase)

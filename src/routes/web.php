@@ -9,7 +9,6 @@ use App\Http\Controllers\ShippingAddressController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TradeChatController;
 use App\Http\Controllers\TradeController;
-use App\Http\Requests\CommentStoreRequest;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -117,8 +116,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/trades', [TradeController::class, 'index'])->name('trades.index');
     // 取引中詳細
     Route::get('/trades/{purchase}', [TradeController::class, 'show'])->whereNumber('purchase')->name('trades.show');
-    // 取引チャット
-    Route::get('/trades/{purchase}/chat', [TradeController::class, 'chat'])->name('trades.chat');
+
     // 取引チャット画面
     Route::get('/trades/{purchase}/chat', [TradeChatController::class, 'show'])
         ->name('trades.chat.show')
@@ -130,12 +128,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('auth');
 
     // 評価送信用ルート
-    Route::post('/trades/{purchase}/rating', [TradeChatController::class, 'storeRating'])
-        ->name('trades.rating.store');
-
     Route::post('/trades/{purchase}/rating', [TradeChatController::class, 'rate'])
         ->name('trades.rating')
         ->middleware('auth');
+
     // メッセージ編集・削除
     Route::patch('/trades/messages/{message}', [TradeChatController::class, 'update'])
         ->name('trades.messages.update');
