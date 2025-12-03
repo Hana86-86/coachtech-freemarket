@@ -1878,16 +1878,16 @@ body {
 /* ================= 評価モーダル ================= */
 
 .rating-modal {
-  display: none;               
-  position: fixed;             
-  inset: 0;                    
-  justify-content: center;     
-  align-items: center;         
-  z-index: 1000;               
+  display: none;
+  position: fixed;
+  inset: 0;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 .rating-modal.is-open {
-  display: flex;               
+  display: flex;
 }
 
 .rating-modal__overlay {
@@ -1953,7 +1953,7 @@ body {
 }
 /* ★ のデフォルト色（未選択） */
 .rating-modal__star-icon {
-  color: #ccc;          /* グレー */
+  color: #ccc;
   transition: color 0.2s;
 }
 
@@ -1966,4 +1966,204 @@ body {
 }
 .rating-modal__star-icon.is-active {
   color: #f5b301;
+}
+.trade-sidebar {
+  width: 180px;
+  background: #f4f4f4;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.trade-sidebar p {
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.trade-sidebar a {
+  display: block;
+  padding: 6px 4px;
+  margin-bottom: 6px;
+  color: #333;
+  text-decoration: none;
+}
+
+.trade-sidebar a:hover {
+  background: #e8e8e8;
+  border-radius: 4px;
+}
+.trade-item {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.trade-item__image img {
+  width: 260px;
+  height: auto;
+  border-radius: 8px;
+}
+
+.trade-item__info {
+  flex: 1;
+}
+
+.trade-item__title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.trade-item__price {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.btn-primary {
+  background: #e66;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #d45555;
+}
+.chat-message {
+  background: #ffecec;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.chat-message.mine {
+  background: #fff3e0;
+}
+
+.chat-message__header {
+  font-size: 12px;
+  color: #666;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.chat-message__body {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.chat-message__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-message__actions a,
+.chat-message__actions button {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  background: #eee;
+}
+
+.chat-message__actions button {
+  background: #fcc;
+}
+
+.chat-message__actions a:hover {
+  background: #ddd;
+}
+
+.chat-message__actions button:hover {
+  background: #e88;
+}
+/* ================= 取引チャット：ヘッダーまわり ================= */
+
+/* ヘッダー全体 */
+.trade-chat__head {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* 「取引相手：◯◯さんとの取引画面」 */
+.trade-chat__head-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* 相手ユーザー名 */
+.trade-chat__head-partner {
+  font-weight: 700;
+}
+
+/* 「あなたは〜として参加しています」 */
+.trade-chat__head-role {
+  font-size: 14px;
+  color: #666;
+}
+
+.trade-chat__head-role-label {
+  font-weight: 700;
+}
+
+/* ================= 商品カード（画像＋タイトル） ================= */
+
+.trade-chat__product-block {
+  display: flex;               /* 横並びにする */
+  gap: 32px;                   /* 画像とテキストの間隔 */
+  align-items: flex-start;
+  margin-bottom: 40px;
+}
+
+/* 画像まわり */
+.trade-chat__product-image-wrap {
+  flex: 0 0 260px;
+}
+
+.trade-chat__product-image {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+/* テキスト部分 */
+.trade-chat__product-info {
+  flex: 1;
+}
+
+.trade-chat__product-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.trade-chat__product-price {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+/* 「取引を完了する」ボタンの位置 */
+.trade-chat__complete-btn {
+  margin-top: 8px;
+}
+/* ================= メッセージ編集・削除ボタン ================= */
+
+.trade-chat__message-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.trade-chat__message-edit-form,
+.trade-chat__message-delete-form {
+  display: inline-block;
 }

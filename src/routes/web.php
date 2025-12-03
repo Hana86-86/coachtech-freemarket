@@ -137,4 +137,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('trades.messages.update');
     Route::delete('/trades/messages/{message}', [TradeChatController::class, 'destroy'])
         ->name('trades.messages.destroy');
+
+    // 購入者が押す取引ボタン
+    Route::post('/trades/{purchase}/complete', [TradeChatController::class, 'complete'])
+        ->name('trades.complete');
 });

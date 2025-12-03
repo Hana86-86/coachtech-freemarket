@@ -135,6 +135,11 @@ class TradeChatController extends Controller
     {
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
+        ], [
+            'rating.required' => '評価を選択してください。',
+            'rating.integer'  => '評価は数値で指定してください。',
+            'rating.min'      => '1〜5の範囲で評価してください。',
+            'rating.max'      => '1〜5の範囲で評価してください。',
         ]);
 
         $user = $request->user();
@@ -144,7 +149,6 @@ class TradeChatController extends Controller
         if (! $isBuyer && ! $isSeller) {
             abort(403, 'この取引の当事者のみ評価できます。');
         }
-
         if ($isBuyer && !is_null($purchase->buyer_rating)) {
             return back()->with('success', '既に購入者として評価済みです。');
         }
@@ -153,25 +157,47 @@ class TradeChatController extends Controller
         }
 
         if ($isBuyer) {
+            // 購入者 → 出品者への評価
+            $purchase->seller_rating = $validated['rating'];
+        }
+
+        if ($isSeller) {
+            // 出品者 → 購入者への評価
             $purchase->buyer_rating = $validated['rating'];
         }
-        if ($isSeller) {
-            $purchase->seller_rating = $validated['rating'];
+
+
+        $purchase->save();
+
+        // ★ メールは「購入者が評価したタイミングだけ」送る
+    if ($isBuyer) {
+        $seller = $purchase->product->user;
+
+        if ($seller && $seller->email) {
+            Mail::to($seller->email)
+                ->send(new TradeCompletedMail($purchase));
+        }
+    }
+
+        return redirect()
+            ->route('products.index')
+            ->with('success', '評価を送信しました。(取引完了メールを送信しました)');
+    }
+    public function complete(Request $request, Purchase $purchase)
+    {
+        $user = $request->user();
+
+        if ($purchase->buyer_id !== $user->id) {
+            abort(403, '取引を完了できるのは購入者のみです。');
+        }
+
+        if ($purchase->status === 'completed') {
+            return back()->with('success', 'すでに取引は完了しています。');
         }
 
         $purchase->status = 'completed';
         $purchase->save();
 
-        $seller = $purchase->product->user;
-
-        if ($seller && $seller->email) {
-            Mail::to($seller->email)->send(
-                new TradeCompletedMail($purchase)
-            );
-        }
-
-        return redirect()
-            ->route('products.index')
-            ->with('success', '評価を送信しました。(取引完了メールを送信しました)');
+        return back()->with('success', '取引を完了しました。評価を入力してください。');
     }
 }

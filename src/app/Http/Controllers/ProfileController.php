@@ -19,27 +19,47 @@ class ProfileController extends Controller
         $user = $request->user();   // ログイン中ユーザー
         $currentTab = $request->query('tab', 'selling');
 
-        // 出品した商品
         $myProducts = $user->products()
             ->latest('created_at')
             ->get();
 
-        // ★ 取引中の購入情報（自分が買った or 自分が売っている商品を両方取得）
-        $tradingPurchases = Purchase::query()
-            ->where('status', Purchase::STATUS_TRADING)
-            ->where(function ($query) use ($user) {
-                $query->where('buyer_id', $user->id)
-                    ->orWhereHas('product', function ($sq) use ($user) {
-                        $sq->where('user_id', $user->id);
+        // ▼ 自分が購入者側の取引
+        $tradingAsBuyer = Purchase::query()
+            ->where('buyer_id', $user->id)
+            ->where(function ($q) {
+                $q->where('status', Purchase::STATUS_TRADING)
+                    ->orWhere(function ($q2) {
+                        $q2->where('status', Purchase::STATUS_COMPLETED)
+                            ->whereNull('buyer_rating'); // 購入者評価がまだ
                     });
             })
             ->with('product')
-            ->latest('paid_at')
             ->get();
+
+        // ▼ 自分が出品者側の取引
+        $tradingAsSeller = Purchase::query()
+            ->whereHas('product', function ($sq) use ($user) {
+                $sq->where('user_id', $user->id); // 自分が出品した商品
+            })
+            ->where(function ($q) {
+                $q->where('status', Purchase::STATUS_TRADING)
+                    ->orWhere(function ($q2) {
+                        $q2->where('status', Purchase::STATUS_COMPLETED)
+                            ->whereNull('seller_rating'); // 出品者評価がまだ
+                    });
+            })
+            ->with('product')
+            ->get();
+
+        // ▼ 上の2つを合体して、支払い日時の新しい順に並べる
+        $tradingPurchases = $tradingAsBuyer
+            ->merge($tradingAsSeller)
+            ->sortByDesc('paid_at')
+            ->values();
 
         // ★ 各取引ごとに未読件数を計算してプロパティに入れる
         foreach ($tradingPurchases as $purchase) {
-            
+
             $isBuyer = ($purchase->buyer_id === $user->id);
 
             // 相手側のユーザーID（自分から見て「相手」が誰か）
