@@ -151,9 +151,9 @@
                 </div>
                 @endif
 
-                <a href="{{ route('trades.chat.show', $purchase) }}" class="product-card__link">
+                <a href="{{ route('trades.chat.show', $purchase) }}" class="gp-thumb">
                     <div class="product-card__image">
-                        <img src="{{ $product->image_url }}" alt="{{ $product->title }}" class="trading-image">
+                        <img src="{{ $product->image_url }}" alt="{{ $product->title }}" class="card_thumb">
                     </div>
                     <div class="product-card__body">
                         <div class="product-card__title">{{ $product->title }}</div>
