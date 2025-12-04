@@ -20,7 +20,7 @@ class TradeMessage extends Model
         'type',
         'image_path',
     ];
-    
+
     public function getImageUrlAttribute()
     {
         if (!$this->image_path) {
@@ -29,7 +29,6 @@ class TradeMessage extends Model
         return Storage::url($this->image_path);
     }
 
-    /** このメッセージを書いたユーザー */
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -13,6 +13,7 @@
 
     $canRateAsSeller = $isSeller
         && $purchase->status === 'completed'
+        && ! is_null($purchase->buyer_rating)
         && is_null($purchase->seller_rating);
 
     $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
@@ -20,7 +21,7 @@
 @section('content')
 <div class="trade-chat">
 
-  {{-- ================= 左カラム：その他の取引一覧 ================= --}}
+  {{-- ================= 左サイドバー ================= --}}
   <aside class="trade-chat__sidebar">
     <p class="trade-chat__sidebar-title">その他の取引</p>
 

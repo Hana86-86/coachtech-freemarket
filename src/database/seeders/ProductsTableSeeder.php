@@ -114,12 +114,10 @@ class ProductsTableSeeder extends Seeder
 
         foreach ($rows as $row) {
 
-            // カテゴリ名 → ID の変換
             $categoryId = DB::table('categories')
                 ->where('name', $row['category_name'])
                 ->value('id');
 
-            // products テーブルへ登録
             $product_id = DB::table('products')->insertGetId([
                 'user_id'    => $row['user_id'],
                 'title'      => $row['title'],
@@ -132,7 +130,6 @@ class ProductsTableSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
-            // category_product への紐付け
             DB::table('category_product')->insert([
                 'product_id'  => $product_id,
                 'category_id' => $categoryId,

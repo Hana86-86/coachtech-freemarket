@@ -161,9 +161,13 @@ class TradeChatController extends Controller
     }
 
     if ($isSeller) {
-        $purchase->seller_rating = $validated['rating'];
+        if (is_null($purchase->buyer_rating)) {
+        return back()->with('error', '購入者の評価が完了してから、出品者として評価してください。');
     }
 
+    // ★ 購入者が評価済みなら、出品者の評価を保存
+    $purchase->seller_rating = $validated['rating'];
+    }
 
         $purchase->save();
 
