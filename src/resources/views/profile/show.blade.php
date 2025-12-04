@@ -8,7 +8,7 @@
     {{-- ユーザー情報 --}}
     <header class="mp-head">
         <img src="{{ $user->avatarUrl }}" alt="{{ $user->name }}" class="mp-avatar">
-        
+
         <div class="mp-user">
             <h1 class="mp-user-name">{{ $user->name }}</h1>
             <div class="mp-user-rating">
@@ -153,7 +153,7 @@
 
                 <a href="{{ route('trades.chat.show', $purchase) }}" class="product-card__link">
                     <div class="product-card__image">
-                        <img src="{{ $product->image_url }}" alt="{{ $product->title }}">
+                        <img src="{{ $product->image_url }}" alt="{{ $product->title }}" class="trading-image">
                     </div>
                     <div class="product-card__body">
                         <div class="product-card__title">{{ $product->title }}</div>

@@ -2167,3 +2167,9 @@ body {
 .trade-chat__message-delete-form {
   display: inline-block;
 }
+.trading-image {
+  width: 300px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 6px;
+}
