@@ -3,23 +3,18 @@
 @php
     $user = auth()->user();
 
-    // ログインユーザーが購入者か？
     $isBuyer = $user && $purchase->buyer_id === $user->id;
 
-    // ログインユーザーが出品者か？
     $isSeller = $user && $purchase->product->user_id === $user->id;
 
-    // 購入者：completed で buyer_rating が null のときだけ評価できる
     $canRateAsBuyer = $isBuyer
         && $purchase->status === 'completed'
         && is_null($purchase->buyer_rating);
 
-    // 出品者：completed で seller_rating が null のときだけ評価できる
     $canRateAsSeller = $isSeller
         && $purchase->status === 'completed'
         && is_null($purchase->seller_rating);
 
-    // モーダルを出す必要があるか？
     $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
 @endphp
 @section('content')
@@ -32,12 +27,10 @@
     <ul class="trade-chat__thread-list">
       @forelse ($otherTrades as $other)
         @php
-          // 他の取引の商品のショートカット
           $p = $other->product;
         @endphp
 
         <li class="trade-chat__thread {{ $other->id === $purchase->id ? 'trade-chat__thread--active' : '' }}">
-          {{-- クリックで、その取引のチャット画面へ遷移 --}}
           <a href="{{ route('trades.chat.show', $other) }}" class="trade-chat__thread-link">
             <div class="trade-chat__thread-user">
               {{ $p->title }}
@@ -58,7 +51,7 @@
   {{-- ================= 右側：メインエリア ================= --}}
   <main class="trade-chat__main">
 
-    {{-- ▼ 取引相手＋自分の立場（購入者 / 出品者）ヘッダー --}}
+    {{-- （購入者 / 出品者）ヘッダー --}}
     <header class="trade-chat__head">
       <p class="trade-chat__head-title">
         取引相手：
@@ -69,7 +62,6 @@
       </p>
 
       @php
-          // ロール表示用ラベルを作る
           $roleLabel = match ($role) {
               'buyer'  => '購入者として',
               'seller' => '出品者として',
@@ -123,7 +115,6 @@
     <section class="trade-chat__messages">
       @foreach ($messages as $message)
         @php
-          // 自分のメッセージかどうかを判定
           $isMine = $message->user_id === auth()->id();
         @endphp
 
@@ -280,16 +271,6 @@
         </div>
       </div>
     @endif
-
-    {{-- ★ デバッグ用：今の値を軽く表示（動きの確認用） --}}
-    <section class="trade-chat__debug">
-      <p>DEBUG: status={{ $purchase->status }},
-        buyer_rating={{ $purchase->buyer_rating ?? 'null' }},
-        seller_rating={{ $purchase->seller_rating ?? 'null' }},
-        isBuyer={{ $isBuyer ? 'true' : 'false' }},
-        isSeller={{ $isSeller ? 'true' : 'false' }}
-      </p>
-    </section>
 
   </main>
 </div>

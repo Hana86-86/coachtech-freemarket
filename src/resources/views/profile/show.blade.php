@@ -8,34 +8,58 @@
     {{-- ユーザー情報 --}}
     <header class="mp-head">
         <img src="{{ $user->avatarUrl }}" alt="{{ $user->name }}" class="mp-avatar">
-        <h1 class="mp-user-name">
-
-            @if(!is_null($buyerRatingAvg))
-            <span class="mp-rating">購入：★{{ $buyerRatingAvg }} / 5</span>
-            @endif
-            @if(!is_null($sellerRatingAvg))
-            <span class="mp-rating">出品：★{{ $sellerRatingAvg }} / 5</span>
-            @endif
-        </h1>
+        
         <div class="mp-user">
             <h1 class="mp-user-name">{{ $user->name }}</h1>
             <div class="mp-user-rating">
-                @if (is_null($buyerRatingAvg))
+                {{-- 出品購入どちらも評価がない場合 --}}
+                @if (is_null($buyerRatingAvg) && is_null($sellerRatingAvg))
                 <span class="mp-user-rating__label">まだ評価はありません</span>
                 @else
-                @php
-                $starScore = (int) round($buyerRatingAvg);
-                @endphp
-                <span class="map-user-rating__stars">
-                    @for ($i = 1; $i <= 5; $i++)
-                        <span class="mp-user-rating__star">
-                        {{ $i <= $starScore ? '★' : '☆'}}
-                </span>
-                @endfor
-                </span>
-                <span class="mp-user-rating__value">
-                    ({{ $buyerRatingAvg }} / 5)
-                </span>
+                {{-- 購入者として評価ありの場合 --}}
+                @if (!is_null($buyerRatingAvg))
+                <div class="mp-user-rating__row">
+                    <span class="mp-user-rating__label">購入者としての評価</span>
+
+                    @php
+                    $buyerStarScore = (int) round($buyerRatingAvg);
+                    @endphp
+
+                    <span class="map-user-rating__stars">
+                        @for ($i = 1; $i <= 5; $i++)
+                            <span class="mp-user-rating__star">
+                            {{ $i <= $buyerStarScore ? '★' : '☆'}}
+                    </span>
+                    @endfor
+                    </span>
+
+                    <span class="mp-user-rating__value">
+                        ({{ $buyerRatingAvg }} / 5)
+                    </span>
+                </div>
+                @endif
+                {{-- 出品者として評価ありの場合 --}}
+                @if (!is_null($sellerRatingAvg))
+                <div class="mp-user-rating__row">
+                    <span class="mp-user-rating__label">出品者としての評価</span>
+
+                    @php
+                    $sellerStarScore = (int) round($sellerRatingAvg);
+                    @endphp
+
+                    <span class="map-user-rating__stars">
+                        @for ($i = 1; $i <= 5; $i++)
+                            <span class="mp-user-rating__star">
+                            {{ $i <= $sellerStarScore ? '★' : '☆'}}
+                    </span>
+                    @endfor
+                    </span>
+
+                    <span class="mp-user-rating__value">
+                        ({{ $sellerRatingAvg }} / 5)
+                    </span>
+                </div>
+                @endif
                 @endif
             </div>
             <a href="{{ route('profile.edit') }}" class="btn btn--ghost btn--sm profile-edit">プロフィールを編集</a>
@@ -53,21 +77,21 @@
             購入した商品
         </a>
         {{-- ★ 取引中タブ：未読があればクラス has-unread を付ける --}}
-    @php
+        @php
         $hasUnread = !empty($tradingUnreadTotal) && $tradingUnreadTotal > 0;
-    @endphp
-    <a href="{{ route('profile.show', ['tab' => 'trading']) }}"
-        class="mypage-tab mypage-tab--trading {{ $currentTab === 'trading' ? 'is-active' : '' }} {{ $hasUnread ? 'has-unread' : '' }}">
-        取引中の商品
+        @endphp
+        <a href="{{ route('profile.show', ['tab' => 'trading']) }}"
+            class="mypage-tab mypage-tab--trading {{ $currentTab === 'trading' ? 'is-active' : '' }} {{ $hasUnread ? 'has-unread' : '' }}">
+            取引中の商品
 
-        {{-- ★ 未読が1件以上あるときだけ赤丸＋件数を表示 --}}
-        @if ($hasUnread)
+            {{-- ★ 未読が1件以上あるときだけ赤丸＋件数を表示 --}}
+            @if ($hasUnread)
             <span class="mypage-tab__badge">
                 {{ $tradingUnreadTotal }}
             </span>
-        @endif
-    </a>
-</nav>
+            @endif
+        </a>
+    </nav>
     {{-- タブ下の区切り線 --}}
     <hr class="mp-divider">
 

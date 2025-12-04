@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileRequest;
-use App\Models\Product;
 use App\Models\Profile;
 use App\Models\Purchase;
-use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -16,14 +13,14 @@ class ProfileController extends Controller
 {
     public function show(Request $request)
     {
-        $user = $request->user();   // ログイン中ユーザー
+        $user = $request->user();
         $currentTab = $request->query('tab', 'selling');
 
         $myProducts = $user->products()
             ->latest('created_at')
             ->get();
 
-        // ▼ 自分が購入者側の取引
+        // 自分が購入者側の取引
         $tradingAsBuyer = Purchase::query()
             ->where('buyer_id', $user->id)
             ->where(function ($q) {
@@ -36,7 +33,7 @@ class ProfileController extends Controller
             ->with('product')
             ->get();
 
-        // ▼ 自分が出品者側の取引
+        // 自分が出品者側の取引
         $tradingAsSeller = Purchase::query()
             ->whereHas('product', function ($sq) use ($user) {
                 $sq->where('user_id', $user->id); // 自分が出品した商品
@@ -51,31 +48,27 @@ class ProfileController extends Controller
             ->with('product')
             ->get();
 
-        // ▼ 上の2つを合体して、支払い日時の新しい順に並べる
         $tradingPurchases = $tradingAsBuyer
             ->merge($tradingAsSeller)
             ->sortByDesc('paid_at')
             ->values();
 
-        // ★ 各取引ごとに未読件数を計算してプロパティに入れる
         foreach ($tradingPurchases as $purchase) {
 
             $isBuyer = ($purchase->buyer_id === $user->id);
 
-            // 相手側のユーザーID（自分から見て「相手」が誰か）
             $otherUserId = $isBuyer
-                ? $purchase->product->user_id   // 自分が買い手 → 相手は出品者
-                : $purchase->buyer_id;          // 自分が出品者 → 相手は買い手
+                ? $purchase->product->user_id
+                : $purchase->buyer_id;
 
-            // 自分側の「最後に読んだ時刻」
             $lastReadAt = $isBuyer
                 ? $purchase->buyer_last_read_at
                 : $purchase->seller_last_read_at;
 
-            // ★ trade_messages テーブルから未読をカウント
+            // trade_messages テーブルから未読をカウント
             $unreadQuery = \App\Models\TradeMessage::query()
-                ->where('trade_id', $purchase->id)     // この取引のメッセージだけ
-                ->where('user_id', $otherUserId);      // 相手が送ったものだけ
+                ->where('trade_id', $purchase->id)
+                ->where('user_id', $otherUserId);
 
             // 最後に読んだ時間があれば「それ以降」を未読とみなす
             if ($lastReadAt) {

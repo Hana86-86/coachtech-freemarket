@@ -157,19 +157,16 @@ class TradeChatController extends Controller
         }
 
         if ($isBuyer) {
-            // 購入者 → 出品者への評価
-            $purchase->seller_rating = $validated['rating'];
-        }
+        $purchase->buyer_rating = $validated['rating'];
+    }
 
-        if ($isSeller) {
-            // 出品者 → 購入者への評価
-            $purchase->buyer_rating = $validated['rating'];
-        }
+    if ($isSeller) {
+        $purchase->seller_rating = $validated['rating'];
+    }
 
 
         $purchase->save();
 
-        // ★ メールは「購入者が評価したタイミングだけ」送る
     if ($isBuyer) {
         $seller = $purchase->product->user;
 
