@@ -88,8 +88,9 @@ class ProfileController extends Controller
 
         // 平均評価（購入側）
         $buyerRatingAvg = $user->purchases()
-            ->whereNotNull('buyer_rating')
-            ->avg('buyer_rating');
+        ->where('status', Purchase::STATUS_COMPLETED)
+            ->whereNotNull('seller_rating')
+            ->avg('seller_rating');
 
         if (!is_null($buyerRatingAvg)) {
             $buyerRatingAvg = round($buyerRatingAvg, 1);
@@ -100,8 +101,9 @@ class ProfileController extends Controller
             ->whereHas('product', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
-            ->whereNotNull('seller_rating')
-            ->avg('seller_rating');
+            ->where('status', Purchase::STATUS_COMPLETED)
+            ->whereNotNull('buyer_rating')
+            ->avg('buyer_rating');
 
         if (!is_null($sellerRatingAvg)) {
             $sellerRatingAvg = round($sellerRatingAvg, 1);

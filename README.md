@@ -53,7 +53,26 @@ php artisan key:generate
 
 php artisan storage:link
 
-７） マイグレーションとシーディング
+7. メール送信設定（Mailtrap）
+- 本アプリのメール通知機能では MailTrap を使用しています。
+MailTrap のアカウントを作成し、Inbox をひとつ作成してください。
+
+MailTrap の Inbox 画面に表示される SMTP Credentials を .env に反映します。
+
+MAIL_MAILER=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=（Mailtrap の Username）
+MAIL_PASSWORD=（Mailtrap の Password）
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS=example@example.com # 任意のメールアドレスでOK
+MAIL_FROM_NAME=“Freemarket”
+
+3）取引完了時に送信される確認メールが Mailtrap の Inbox に届きます。
+
+----
+
+8. マイグレーションとシーディング
 ・ダミーデータについて（Seeder）
 本アプリでは検証用にユーザー・商品・カテゴリーのダミーデータを Seeder によって自動生成しています。
 Docker 起動後、以下のコマンドでデータベースへ投入されます
@@ -70,6 +89,28 @@ php artisan migrate:fresh --seed
 
 ---
 
+## 追加機能概要（取引チャット・評価機能）
+
+以下の、フリマ取引機能を追加実装しました。
+
+- 取引中の商品の一覧表示（マイページの「取引中の商品」タブ）
+- 取引チャット機能
+  - テキストメッセージ送信
+  - 画像アップロード(jpeg / png 形式)
+  - メッセージの編集・削除
+- 取引完了機能
+- 購入者が「取引完了」ボタンを押すと'purchases.status'を 'completed'に変更
+- 取引完了後、完了メールを出品者に送信（MailTrap で確認可能）
+- ユーザー評価機能
+- 購入者・出品者がお互いを評価（１〜５）
+- 評価は、'purchases.buyer_rating' / 'purchases.seller_rating' に保存
+- プロフィール画面で「購入者としての平均評価」「出品者としての平均評価」を表示
+- 未読メッセージ数
+- 'trade_messages' と 'buyer_last_read_at' / 'seller_last_read_at' を用いて、
+  マイページの「取引中の商品」タブに未読件数バッジを表示
+
+---
+
 ・ダミーデータについて（Seeder）
 本アプリでは検証用にユーザー・商品・カテゴリーのダミーデータを Seeder によって自動生成しています。
 Doker 起動後、以下のコマンドでデータベースへ投入されます
@@ -79,28 +120,33 @@ Doker 起動後、以下のコマンドでデータベースへ投入されま�
 Seeder によって以下の 3 ユーザーが作成されます。
 メール認証済み状態（email_verified_at あり） のため、そのままログインできます。
 
-① 出品者 A
-・メール seller1@example.com
-・パスワード  password
-・商品 C001〜C005 を出品
+① 出品者 A(評価なし)
 
-② 出品者 B
-・メール seller2@example.com
-・パスワード  password
-・商品 C006〜C010 を出品
+- メール seller1@example.com
+- パスワード password
+- 商品 C001〜C005 を出品
 
-③ 購入者ユーザー
-・メール buyer@example.com
-・パスワード password
-・商品は出品せず、購入専用ユーザー
-・購入した商品
-• product_id：1
-• 商品名：Seeder 実行時に自動生成された商品の 1 件目
-• 購入金額（amount）：Seeder の内容に基づき設定（例：8,000 円）
-• ステータス：trading（取引中）
-• 支払い方法：card（ダミー）
-＊php artisan migrate:fresh --seed を実行すると、
-products の ID 付与順が変わるため、product_id=1 が指す商品も毎回変わる点に注意してください。
+② 出品者 B(評価あり)
+
+- メール seller2@example.com
+- パスワード password
+- 商品 C006〜C010 を出品
+
+③ 購入者ユーザー(評価あり)
+
+- メール buyer@example.com
+- パスワード password
+- 商品は出品せず、購入専用ユーザー
+
+- 購入した商品(１つ目)
+  ・ 腕時計：価格：15,000 円
+  ・ status = trading(取引中)
+
+- 購入した商品(２つ目)
+  ・ マイク：価格：8,000 円
+  ・ status = completed(取引完了済み)
+  ・ 'buyer_rating'    => 4,
+  ・ 'seller_rating'   => 2,
 
 - ログイン確認用
   • ログイン画面 → seller1@example.com / password
