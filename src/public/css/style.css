@@ -2088,6 +2088,11 @@ body {
   display: block;
   margin-bottom: 6px;
 }
+.form-error {
+    color: #e00;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
 
 .trade-chat__textarea {
   width: 100%;

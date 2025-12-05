@@ -79,42 +79,6 @@ Docker 起動後、以下のコマンドでデータベースへ投入されま�
 
 php artisan migrate:fresh --seed
 
-動作確認 URL
-• Web: http://localhost:8081
-• phpMyAdmin: http://localhost:8080
-
----
-
-![ER図](er-diagram.png)
-
----
-
-## 追加機能概要（取引チャット・評価機能）
-
-以下の、フリマ取引機能を追加実装しました。
-
-- 取引中の商品の一覧表示（マイページの「取引中の商品」タブ）
-- 取引チャット機能
-  - テキストメッセージ送信
-  - 画像アップロード(jpeg / png 形式)
-  - メッセージの編集・削除
-- 取引完了機能
-- 購入者が「取引完了」ボタンを押すと'purchases.status'を 'completed'に変更
-- 取引完了後、完了メールを出品者に送信（MailTrap で確認可能）
-- ユーザー評価機能
-- 購入者・出品者がお互いを評価（１〜５）
-- 評価は、'purchases.buyer_rating' / 'purchases.seller_rating' に保存
-- プロフィール画面で「購入者としての平均評価」「出品者としての平均評価」を表示
-- 未読メッセージ数
-- 'trade_messages' と 'buyer_last_read_at' / 'seller_last_read_at' を用いて、
-  マイページの「取引中の商品」タブに未読件数バッジを表示
-
----
-
-・ダミーデータについて（Seeder）
-本アプリでは検証用にユーザー・商品・カテゴリーのダミーデータを Seeder によって自動生成しています。
-Doker 起動後、以下のコマンドでデータベースへ投入されます
-
 ・ 生成されるテストユーザー
 
 Seeder によって以下の 3 ユーザーが作成されます。
@@ -153,3 +117,37 @@ Seeder によって以下の 3 ユーザーが作成されます。
   • マイページ → 出品商品一覧で C001〜C005 が確認できます。
 - 商品画像は storage/app/public/products/ へ、コピー済みで、
   php artisan storage:link により公開されます。
+------
+
+動作確認 URL
+• Web: http://localhost:8081
+• phpMyAdmin: http://localhost:8080
+
+---
+
+![ER図](er-diagram.png)
+
+---
+
+## 追加機能概要（取引チャット・評価機能）
+
+以下の、フリマ取引機能を追加実装しました。
+
+- 取引中の商品の一覧表示（マイページの「取引中の商品」タブ）
+- 取引チャット機能
+  - テキストメッセージ送信
+  - 画像アップロード(jpeg / png 形式)
+  - メッセージの編集・削除
+- 取引完了機能
+- 購入者が「取引完了」ボタンを押すと'purchases.status'を 'completed'に変更
+- 取引完了後、完了メールを出品者に送信（MailTrap で確認可能）
+- ユーザー評価機能
+- 購入者・出品者がお互いを評価（１〜５）
+- 評価は、'purchases.buyer_rating' / 'purchases.seller_rating' に保存
+- プロフィール画面で「購入者としての平均評価」「出品者としての平均評価」を表示
+- 未読メッセージ数
+- 'trade_messages' と 'buyer_last_read_at' / 'seller_last_read_at' を用いて、
+  マイページの「取引中の商品」タブに未読件数バッジを表示
+
+---
+

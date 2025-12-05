@@ -6,9 +6,9 @@ use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Models\Category;
 use App\Models\Product;
-
+use App\Models\Purchase;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+
 
 class ProductController extends Controller
 {
@@ -79,7 +79,15 @@ class ProductController extends Controller
 
         $isOwner = auth()->check() && $product->user_id === auth()->id();
 
-        return view('products.show', compact('product', 'isOwner', 'isFavorited'));;
+        $hasPurchased = false;
+
+        if (auth()->check()) {
+            $hasPurchased = Purchase::where('product_id', $product->id)
+            ->where('buyer_id', auth()->id())
+            ->exists();
+        }
+
+        return view('products.show', compact('product', 'isOwner', 'isFavorited', 'hasPurchased'));;
     }
     // 出品編集フォーム
     public function edit(Product $product)

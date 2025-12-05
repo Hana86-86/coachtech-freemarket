@@ -70,8 +70,9 @@
         @php
             $isSold = $product->sale_status === \App\Models\Product::SALE_STATUS_SOLD;
             $isOwner = auth()->check() && $product->user_id === auth()->id();
+            $alreadyBought = $hasPurchased ?? false;
         @endphp
-        @if ($isSold || $isOwner)
+        @if ($isSold || $isOwner || $alreadyBought)
         <button class="buy-button w-full" disabled aria-disabled="true">購入手続きへ</button>
         @else
         @guest

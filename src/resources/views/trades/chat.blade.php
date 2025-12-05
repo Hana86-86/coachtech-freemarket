@@ -53,53 +53,53 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
   <main class="trade-chat__main">
 
     <header class="trade-chat__head">
-  <div class="trade-chat__head-left">
-    <div class="trade-chat__head-avatar">
-      @php
-        $roleMark = match ($role) {
-          'buyer'  => '購',
+      <div class="trade-chat__head-left">
+        <div class="trade-chat__head-avatar">
+          @php
+          $roleMark = match ($role) {
+          'buyer' => '購',
           'seller' => '出',
-          default  => '？',
-        };
-      @endphp
+          default => '？',
+          };
+          @endphp
 
-      <span class="role-avatar role-avatar--{{ $role === 'buyer' ? 'buyer' : 'seller' }}">
-        {{ $roleMark }}
-      </span>
-    </div>
+          <span class="role-avatar role-avatar--{{ $role === 'buyer' ? 'buyer' : 'seller' }}">
+            {{ $roleMark }}
+          </span>
+        </div>
 
-    <div class="trade-chat__head-text">
-      <p class="trade-chat__head-title">
-        {{ $partner->name ?? 'ユーザー名' }} さんとの取引画面
-      </p>
+        <div class="trade-chat__head-text">
+          <p class="trade-chat__head-title">
+            {{ $partner->name ?? 'ユーザー名' }} さんとの取引画面
+          </p>
 
-      @php
-        $roleLabel = match ($role) {
-          'buyer'  => '購入者として',
+          @php
+          $roleLabel = match ($role) {
+          'buyer' => '購入者として',
           'seller' => '出品者として',
-          default  => 'ゲストとして',
-        };
-      @endphp
+          default => 'ゲストとして',
+          };
+          @endphp
 
-      <p class="trade-chat__head-role">
-        <span class="trade-chat__head-role-label">{{ $roleLabel }}</span>
-        参加しています
-      </p>
-    </div>
-  </div>
+          <p class="trade-chat__head-role">
+            <span class="trade-chat__head-role-label">{{ $roleLabel }}</span>
+            参加しています
+          </p>
+        </div>
+      </div>
 
-  {{-- 右側：取引を完了するボタン --}}
-  @if($isBuyer && $purchase->status === 'trading')
-    <div class="trade-chat__head-action">
-      <form method="POST" action="{{ route('trades.complete', $purchase) }}">
-        @csrf
-        <button type="submit" class="btn btn-primary trade-chat__complete-btn">
-          取引を完了する
-        </button>
-      </form>
-    </div>
-  @endif
-</header>
+      {{-- 右側：取引を完了するボタン --}}
+      @if($isBuyer && $purchase->status === 'trading')
+      <div class="trade-chat__head-action">
+        <form method="POST" action="{{ route('trades.complete', $purchase) }}">
+          @csrf
+          <button type="submit" class="btn btn-primary trade-chat__complete-btn">
+            取引を完了する
+          </button>
+        </form>
+      </div>
+      @endif
+    </header>
     {{-- ---------- 上部：商品カード（画像＋商品名＋価格＋ボタン） ---------- --}}
     <section class="trade-chat__product-block">
       {{-- 商品画像 --}}
@@ -206,6 +206,9 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
         @csrf
 
         {{-- テキスト本文 --}}
+        @error('body')
+        <p class="form-error">{{ $message }}</p>
+        @enderror
         <label class="trade-chat__textarea-label">
           <textarea
             name="body"
@@ -213,10 +216,10 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
             placeholder="取引メッセージを記入してください">{{ old('body') }}</textarea>
         </label>
 
-        @error('body')
+
+        @error('image')
         <p class="form-error">{{ $message }}</p>
         @enderror
-
         {{-- 画像アップロード --}}
         <div class="trade-chat__upload">
           <label class="trade-chat__upload-label">
@@ -224,9 +227,6 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
             <input type="file" name="image" accept="image/jpeg,image/png">
           </label>
 
-          @error('image')
-          <p class="form-error">{{ $message }}</p>
-          @enderror
         </div>
 
         <div class="trade-chat__form-footer">
