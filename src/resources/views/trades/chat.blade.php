@@ -34,7 +34,7 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
       <li class="trade-chat__thread {{ $other->id === $purchase->id ? 'trade-chat__thread--active' : '' }}">
         <a href="{{ route('trades.chat.show', $other) }}" class="trade-chat__thread-link">
           <div class="trade-chat__thread-title">
-            {{ $p->title }}
+            {{ $p->title ?? '商品名' }}
           </div>
           <div class="trade-chat__thread-meta">
             {{ $partner->name ?? 'ユーザー名' }}
@@ -122,7 +122,6 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
           ¥{{ number_format($product->price) }}
         </p>
 
-        
       </div>
     </section>
 
@@ -208,11 +207,10 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
 
         {{-- テキスト本文 --}}
         <label class="trade-chat__textarea-label">
-          <span>メッセージを入力してください</span>
           <textarea
             name="body"
             class="trade-chat__textarea"
-            placeholder="メッセージを入力してください">{{ old('body') }}</textarea>
+            placeholder="取引メッセージを記入してください">{{ old('body') }}</textarea>
         </label>
 
         @error('body')
@@ -222,11 +220,7 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
         {{-- 画像アップロード --}}
         <div class="trade-chat__upload">
           <label class="trade-chat__upload-label">
-            {{-- メインのラベル文言を変更 --}}
-            <span class="trade-chat__upload-label-main">画像を追加する</span>
-            {{-- 補足説明は小さく下に表示 --}}
-            <span class="trade-chat__upload-note">（任意・jpeg/png）</span>
-
+            <span class="trade-chat__upload-label-main">画像を追加</span>
             <input type="file" name="image" accept="image/jpeg,image/png">
           </label>
 
@@ -236,9 +230,7 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
         </div>
 
         <div class="trade-chat__form-footer">
-          <button type="submit" class="trade-chat__send-button">
-            送信する
-          </button>
+          <button type="submit" class="trade-chat__send-icon-btn"></button>
         </div>
       </form>
     </section>
