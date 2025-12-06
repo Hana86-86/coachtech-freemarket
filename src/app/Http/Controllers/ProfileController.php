@@ -49,8 +49,19 @@ class ProfileController extends Controller
             ->get();
 
         $tradingPurchases = $tradingAsBuyer
-            ->merge($tradingAsSeller)
-            ->sortByDesc('paid_at')
+            ->merge($tradingAsSeller);
+
+        $tradingPurchases->load([
+            'messages' => function ($q) {
+                $q->latest('created_at')->limit(1);
+            },
+        ]);
+
+        $tradingPurchases = $tradingPurchases
+            ->sortByDesc(function (Purchase $p) {
+                $latest = $p->messages->first();
+                return $latest ? $latest->created_at : $p->paid_at;
+            })
             ->values();
 
         foreach ($tradingPurchases as $purchase) {
@@ -65,18 +76,23 @@ class ProfileController extends Controller
                 ? $purchase->buyer_last_read_at
                 : $purchase->seller_last_read_at;
 
-            // trade_messages テーブルから未読をカウント
             $unreadQuery = \App\Models\TradeMessage::query()
                 ->where('trade_id', $purchase->id)
                 ->where('user_id', $otherUserId);
 
-            // 最後に読んだ時間があれば「それ以降」を未読とみなす
             if ($lastReadAt) {
                 $unreadQuery->where('created_at', '>', $lastReadAt);
             }
 
             $purchase->unread_count = $unreadQuery->count();
         }
+
+        $tradingPurchases = $tradingPurchases
+            ->sortByDesc(function (Purchase $p) {
+                $latest = $p->messages->first();
+                return $latest ? $latest->created_at : $p->paid_at;
+            })
+            ->values();
 
         $tradingUnreadTotal = $tradingPurchases->sum('unread_count');
 
@@ -88,7 +104,7 @@ class ProfileController extends Controller
 
         // 平均評価（購入側）
         $buyerRatingAvg = $user->purchases()
-        ->where('status', Purchase::STATUS_COMPLETED)
+            ->where('status', Purchase::STATUS_COMPLETED)
             ->whereNotNull('seller_rating')
             ->avg('seller_rating');
 

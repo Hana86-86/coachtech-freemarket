@@ -136,35 +136,40 @@
         @endforelse
 
         @elseif ($currentTab === 'trading')
-        {{-- 取引中の商品タブ --}}
-        <div class="product-grid">
-            @forelse ($tradingPurchases as $purchase)
-            @php
+    {{-- 取引中の商品タブ --}}
+    @forelse ($tradingPurchases as $purchase)
+        @php
             $product = $purchase->product;
-            @endphp
+        @endphp
 
-            <div class="product-card">
-                {{-- ★ バッジ（未読件数） --}}
-                @if (!empty($purchase->unread_count) && $purchase->unread_count > 0)
-                <div class="product-card__badge">
+        <article class="product-card">
+            {{-- ★ 未読バッジ（あれば表示） --}}
+            @if (!empty($purchase->unread_count) && $purchase->unread_count > 0)
+                <span class="product-card__badge">
                     {{ $purchase->unread_count }}
-                </div>
-                @endif
+                </span>
+            @endif
 
-                <a href="{{ route('trades.chat.show', $purchase) }}" class="gp-thumb">
-                    <div class="product-card__image">
-                        <img src="{{ $product->image_url }}" alt="{{ $product->title }}" class="card_thumb">
-                    </div>
-                    <div class="product-card__body">
-                        <div class="product-card__title">{{ $product->title }}</div>
-                        <div class="product-card__price">¥{{ number_format($purchase->amount) }}</div>
-                    </div>
-                </a>
+            {{-- チャット画面へのリンク --}}
+            <a href="{{ route('trades.chat.show', $purchase) }}" class="gp-thumb">
+                <img
+                    src="{{ $product->image_url }}"
+                    alt="{{ $product->title }}"
+                    class="card_thumb"
+                >
+            </a>
+
+            <div class="card_body">
+                <h3 class="card_title">{{ $product->title }}</h3>
+
+                {{-- 支払い金額（出品一覧に合わせて価格表示） --}}
+                <p class="card_price">
+                    ¥{{ number_format($purchase->amount ?? $product->price) }}
+                </p>
             </div>
-            @empty
-            <p>取引中の商品はありません。</p>
-            @endforelse
-        </div>
-        @endif
-    </div>
+        </article>
+    @empty
+        <p class="muted">取引中の商品はありません。</p>
+    @endforelse
+@endif
     @endsection

@@ -29,6 +29,10 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
       @forelse ($otherTrades as $other)
       @php
       $p = $other->product;
+      $isBuyerForOther = ($other->buyer_id === $user->id);
+      $partnerForOther = $isBuyerForOther
+          ? $p->user
+          : $other->buyer;
       @endphp
 
       <li class="trade-chat__thread {{ $other->id === $purchase->id ? 'trade-chat__thread--active' : '' }}">
@@ -37,7 +41,7 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
             {{ $p->title ?? '商品名' }}
           </div>
           <div class="trade-chat__thread-meta">
-            {{ $partner->name ?? 'ユーザー名' }}
+            {{ $partnerForOther->name ?? 'ユーザー名' }}
           </div>
         </a>
       </li>

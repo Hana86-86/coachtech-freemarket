@@ -17,27 +17,20 @@ class TradeChatController extends Controller
         $purchase->load(['product.user', 'buyer', 'messages.user']);
 
         $user = auth()->user();
-
         $buyer = $purchase->buyer;
-
         $seller = $purchase->product->user;
-
         $partner = null;
-
         $role = 'guest';
 
         if ($user) {
-            if ($buyer && $buyer->id === $user->id) {
-                $partner = $seller;
-                $role    = 'buyer';
-            } elseif ($seller && $seller->id === $user->id) {
-                $partner = $buyer;
-                $role    = 'seller';
-            } else {
-                $partner = $buyer ?? $seller;
-                $role    = 'guest';
-            }
+        if ($purchase->buyer_id === $user->id) {
+            $partner = $seller;
+            $role    = 'buyer';
+        } elseif ($seller && $seller->id === $user->id) {
+            $partner = $purchase->buyer;
+            $role    = 'seller';
         }
+    }
 
         if ($user) {
             if ($buyer && $buyer->id === $user->id) {
@@ -45,17 +38,32 @@ class TradeChatController extends Controller
             } elseif ($seller && $seller->id === $user->id) {
                 $purchase->seller_last_read_at = now();
             }
-
             $purchase->save();
         }
+        $tradesAsBuyer = Purchase::query()
+            ->where('status', Purchase::STATUS_TRADING)
+            ->where('buyer_id', $user->id);
 
-        $otherTrades = $user
-            ? $user->purchases()
-            ->where('id', '!=', $purchase->id)
-            ->with('product')
-            ->latest('created_at')
+        $tradesAsSeller = Purchase::query()
+            ->where('status', Purchase::STATUS_TRADING)
+            ->whereHas('product', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+
+        $otherTrades = $tradesAsBuyer
             ->get()
-            : collect();
+            ->merge($tradesAsSeller->get())
+            ->where('id', '!=', $purchase->id)
+            ->load(['product', 'buyer', 'product.user', 'messages' => function ($q) {
+                $q->latest('created_at')->limit(1);
+            }]);
+
+        $otherTrades = $otherTrades
+            ->sortByDesc(function (Purchase $p) {
+                $latest = $p->messages->first();
+                return $latest ? $latest->created_at : $p->created_at;
+            })
+            ->values();
 
         $messages = $purchase->messages()
             ->with('user')
@@ -70,7 +78,9 @@ class TradeChatController extends Controller
             'messages',
             'otherTrades',
             'partner',
-            'role'
+            'role',
+            'user',
+            'seller'
         ));
     }
 
@@ -157,28 +167,28 @@ class TradeChatController extends Controller
         }
 
         if ($isBuyer) {
-        $purchase->buyer_rating = $validated['rating'];
-    }
+            $purchase->buyer_rating = $validated['rating'];
+        }
 
-    if ($isSeller) {
-        if (is_null($purchase->buyer_rating)) {
-        return back()->with('error', '購入者の評価が完了してから、出品者として評価してください。');
-    }
+        if ($isSeller) {
+            if (is_null($purchase->buyer_rating)) {
+                return back()->with('error', '購入者の評価が完了してから、出品者として評価してください。');
+            }
 
-    // ★ 購入者が評価済みなら、出品者の評価を保存
-    $purchase->seller_rating = $validated['rating'];
-    }
+            // ★ 購入者が評価済みなら、出品者の評価を保存
+            $purchase->seller_rating = $validated['rating'];
+        }
 
         $purchase->save();
 
-    if ($isBuyer) {
-        $seller = $purchase->product->user;
+        if ($isBuyer) {
+            $seller = $purchase->product->user;
 
-        if ($seller && $seller->email) {
-            Mail::to($seller->email)
-                ->send(new TradeCompletedMail($purchase));
+            if ($seller && $seller->email) {
+                Mail::to($seller->email)
+                    ->send(new TradeCompletedMail($purchase));
+            }
         }
-    }
 
         return redirect()
             ->route('products.index')

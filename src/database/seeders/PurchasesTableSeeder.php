@@ -22,8 +22,8 @@ class PurchasesTableSeeder extends Seeder
             'status'          => 'trading',
             'payment_intent_id' => null,           // 今回は Stripe 連携しないので null
             'session_id'        => null,           // 同上
-            'buyer_rating'     => null,   // ★ 評価なし
-            'seller_rating'    => null,   // ★ 評価なし
+            'buyer_rating'     => null,   //  評価なし
+            'seller_rating'    => null,   //  評価なし
             'paid_at'          => Carbon::now(),
         ]);
         // 2件目：取引中の商品（例：HDD 5,000円
@@ -32,7 +32,7 @@ class PurchasesTableSeeder extends Seeder
             'product_id'        => 2,           // 出品者Aの商品②
             'amount'            => 5000,
             'payment_method'    => 'card',
-            'status'            => 'trading',   // ★ 取引中
+            'status'            => 'trading',   // 取引中
             'payment_intent_id' => null,
             'session_id'        => null,
             'buyer_rating'      => null,
@@ -46,7 +46,7 @@ class PurchasesTableSeeder extends Seeder
             'product_id'        => 3,           // 出品者Aの商品③
             'amount'            => 300,
             'payment_method'    => 'card',
-            'status'            => 'trading',   // ★ 取引中
+            'status'            => 'trading',   // 取引中
             'payment_intent_id' => null,
             'session_id'        => null,
             'buyer_rating'      => null,
