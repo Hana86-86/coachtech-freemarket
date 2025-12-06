@@ -209,6 +209,11 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
         @error('body')
         <p class="form-error">{{ $message }}</p>
         @enderror
+
+        @error('image')
+        <p class="form-error">{{ $message }}</p>
+        @enderror
+
         <label class="trade-chat__textarea-label">
           <textarea
             name="body"
@@ -216,15 +221,11 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
             placeholder="取引メッセージを記入してください">{{ old('body') }}</textarea>
         </label>
 
-
-        @error('image')
-        <p class="form-error">{{ $message }}</p>
-        @enderror
         {{-- 画像アップロード --}}
         <div class="trade-chat__upload">
           <label class="trade-chat__upload-label">
             <span class="trade-chat__upload-label-main">画像を追加</span>
-            <input type="file" name="image" accept="image/jpeg,image/png">
+            <input type="file" name="image" accept="image/*">
           </label>
 
         </div>
@@ -268,11 +269,6 @@ $showRatingModal = $canRateAsBuyer || $canRateAsSeller;
               </label>
               @endfor
           </div>
-
-          {{-- バリデーションエラー表示 --}}
-          @error('rating')
-          <p class="form-error">{{ $message }}</p>
-          @enderror
 
           <button type="submit" class="btn btn--primary rating-modal__submit">
             送信する

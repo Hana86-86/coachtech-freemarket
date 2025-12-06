@@ -23,7 +23,7 @@ class StoreTradeMessageRequest extends FormRequest
     {
         return [
             'body' => ['required', 'string', 'max:400'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png', 'max:4096'],
+            'image' => ['nullable', 'mimes:jpeg,png', 'max:4096'],
         ];
     }
     public function messages(): array
@@ -33,8 +33,7 @@ class StoreTradeMessageRequest extends FormRequest
             'body.string'    => '本文を文字列で入力してください。',
             'body.max'       => '本文は400文字以内で入力してください。',
 
-            'image.image'    => '画像ファイルを選択してください。',
-            'image.mimes'    => '画像はjpegまたはpng形式でアップロードしてください。',
+            'image.mimes'    => '「.png」または「.jpeg」形式でアップロードしてください',
             'image.max'      => '画像サイズは4MB以下にしてください。',
         ];
     }

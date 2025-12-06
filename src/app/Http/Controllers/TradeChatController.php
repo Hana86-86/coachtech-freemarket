@@ -182,7 +182,7 @@ class TradeChatController extends Controller
 
         return redirect()
             ->route('products.index')
-            ->with('success', '評価を送信しました。(取引完了メールを送信しました)');
+            ->with('success', '評価を送信しました。');
     }
     public function complete(Request $request, Purchase $purchase)
     {
